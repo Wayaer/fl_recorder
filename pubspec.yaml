@@ -1,0 +1,23 @@
+name: fl_recorder
+description: "Using microphone recording and system audio capture on Flutter."
+version: 1.0.0
+repository: https://github.com/Wayaer/fl_recorder.git
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  fl_channel: ^0.2.0
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: fl.recorder
+        pluginClass: FlRecorderPlugin
