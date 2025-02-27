@@ -65,14 +65,15 @@ class _AppState extends State<_App> {
               color: Colors.black12.withValues(alpha: 0.1)),
           child: Text(text)),
       Wrap(runSpacing: 10, spacing: 10, children: [
-        ElevatedText(
-            text: 'requestIgnoreBatteryOptimizations',
-            onPressed: () async {
-              final result =
-                  await recording.requestIgnoreBatteryOptimizations();
-              text = "requestIgnoreBatteryOptimizations : $result";
-              setState(() {});
-            }),
+        if (isAndroid)
+          ElevatedText(
+              text: 'requestIgnoreBatteryOptimizations',
+              onPressed: () async {
+                final result =
+                    await recording.requestIgnoreBatteryOptimizations();
+                text = "requestIgnoreBatteryOptimizations : $result";
+                setState(() {});
+              }),
         ElevatedText(
             text: 'initialize(FlAudioSource.capture)',
             onPressed: () async {

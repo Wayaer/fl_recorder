@@ -80,18 +80,22 @@ class FlRecorder {
 
   final MethodChannel _channel = MethodChannel('fl.recorder');
 
+  final String _eventName = 'fl.recorder/event';
+
   bool _isRecording = false;
 
   bool get isRecording => _isRecording;
 
+  FlEventChannel? _flEventChannel;
+
   /// 初始化 前台任务 和录音工具
   Future<bool> initialize(
       {FlAudioSource source = FlAudioSource.capture}) async {
-    final flEvent = await FlChannel().initFlEvent();
-    flEvent?.listen(_onData, onError: _onError, onDone: _onDone);
+    _flEventChannel = await FlChannel().create(_eventName);
+    _flEventChannel?.listen(_onData, onError: _onError, onDone: _onDone);
     final result = await _channel
         .invokeMethod<bool>('initialize', {'source': source.index});
-    return flEvent != null && (result ?? false);
+    return _flEventChannel != null && (result ?? false);
   }
 
   /// 请求忽略电池优化
@@ -118,7 +122,7 @@ class FlRecorder {
     final result = await _channel.invokeMethod<bool>('dispose');
     if (disposeEvent) {
       Future.delayed(const Duration(seconds: 1), () {
-        FlChannel().disposeFlEvent();
+        _flEventChannel?.dispose();
       });
     }
     return result ?? false;
