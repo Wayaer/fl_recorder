@@ -13,6 +13,7 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import fl.channel.FlChannelPlugin
+import fl.channel.FlEventChannel
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -33,62 +34,47 @@ class AudioRecorder(private val context: Context) {
         private const val RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT
     }
 
+    private var flEventChannel: FlEventChannel? = null
+
+    fun getFlEventChannel() {
+        if (flEventChannel == null) {
+            flEventChannel = FlChannelPlugin.getEventChannel("fl.recorder.event")
+        }
+    }
+
     fun initializeMicrophoneAudioRecord(): Boolean {
+        getFlEventChannel()
         if (mRecorder == null) {
             if (checkSelfPermission()) {
-                bufferSize = AudioRecord.getMinBufferSize(
-                    RECORDER_SAMPLE_RATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING
-                )
-                mRecorder = AudioRecord(
-                    MediaRecorder.AudioSource.DEFAULT,
-                    RECORDER_SAMPLE_RATE,
-                    RECORDER_CHANNELS,
-                    RECORDER_AUDIO_ENCODING,
-                    bufferSize
-                )
+                bufferSize = AudioRecord.getMinBufferSize(RECORDER_SAMPLE_RATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING)
+                mRecorder = AudioRecord(MediaRecorder.AudioSource.DEFAULT, RECORDER_SAMPLE_RATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING, bufferSize)
             }
         }
         return this.mRecorder != null
     }
 
     fun initializeMediaProjectionAudioRecord(mProjection: MediaProjection?): Boolean {
+        getFlEventChannel()
         if (mRecorder == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             if (checkSelfPermission()) {
-                val config = AudioPlaybackCaptureConfiguration.Builder(mProjection!!)
-                    .addMatchingUsage(AudioAttributes.USAGE_MEDIA)
-                    .addMatchingUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
-                    .addMatchingUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
-                    .addMatchingUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-                    .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                    .addMatchingUsage(AudioAttributes.USAGE_ALARM)
-                    .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
-                    .addMatchingUsage(AudioAttributes.USAGE_GAME).addMatchingUsage(AudioAttributes.USAGE_ASSISTANT)
-                    .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION)
-                    .addMatchingUsage(AudioAttributes.USAGE_UNKNOWN).build()
-                val format =
-                    AudioFormat.Builder().setEncoding(RECORDER_AUDIO_ENCODING).setSampleRate(RECORDER_SAMPLE_RATE)
-                        .setChannelMask(RECORDER_CHANNELS).build()
-                bufferSize = AudioRecord.getMinBufferSize(
-                    RECORDER_SAMPLE_RATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING
-                )
-                mRecorder = AudioRecord.Builder().setAudioFormat(format).setBufferSizeInBytes(bufferSize)
-                    .setAudioPlaybackCaptureConfig(config).build()
+                val config = AudioPlaybackCaptureConfiguration.Builder(mProjection!!).addMatchingUsage(AudioAttributes.USAGE_MEDIA).addMatchingUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY).addMatchingUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE).addMatchingUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION).addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE).addMatchingUsage(AudioAttributes.USAGE_ALARM).addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT).addMatchingUsage(AudioAttributes.USAGE_GAME).addMatchingUsage(AudioAttributes.USAGE_ASSISTANT).addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION).addMatchingUsage(AudioAttributes.USAGE_UNKNOWN).build()
+                val format = AudioFormat.Builder().setEncoding(RECORDER_AUDIO_ENCODING).setSampleRate(RECORDER_SAMPLE_RATE).setChannelMask(RECORDER_CHANNELS).build()
+                bufferSize = AudioRecord.getMinBufferSize(RECORDER_SAMPLE_RATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING)
+                mRecorder = AudioRecord.Builder().setAudioFormat(format).setBufferSizeInBytes(bufferSize).setAudioPlaybackCaptureConfig(config).build()
             }
         }
         return mRecorder != null
     }
 
     private fun checkSelfPermission(): Boolean {
-        return ActivityCompat.checkSelfPermission(
-            context, Manifest.permission.RECORD_AUDIO
-        ) == PackageManager.PERMISSION_GRANTED;
+        return ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
     }
 
     fun startRecording(): Boolean {
         if (isRecording) return false
         startTime = System.currentTimeMillis()
         isRecording = true
-        FlChannelPlugin.flEvent?.send(true)
+        flEventChannel?.send(true)
         mRecorder?.startRecording()
         if (mRecorder != null) {
             recordingThread = null
@@ -104,7 +90,7 @@ class AudioRecorder(private val context: Context) {
         isRecording = false
         mRecorder?.stop()
         accumulatedTime += System.currentTimeMillis() - startTime!!
-        FlChannelPlugin.flEvent?.send(false)
+        flEventChannel?.send(false)
         return mRecorder != null
     }
 
@@ -115,8 +101,9 @@ class AudioRecorder(private val context: Context) {
         mRecorder = null
         recordingThread = null
         accumulatedTime = 0
+        flEventChannel?.cancel()
+        flEventChannel = null
     }
-
 
     private var accumulatedTime: Long = 0
     private var startTime: Long? = null
@@ -141,13 +128,11 @@ class AudioRecorder(private val context: Context) {
                 val currentTime = System.currentTimeMillis()
                 var time = currentTime - startTime!!
                 time += accumulatedTime
-                FlChannelPlugin.flEvent?.send(
-                    mapOf(
-                        "byte" to byte,
-                        "timeMillis" to time,
-                        "length" to length,
-                    )
-                )
+                flEventChannel?.send(mapOf(
+                    "byte" to byte,
+                    "timeMillis" to time,
+                    "length" to length,
+                ))
             }
         } catch (e: FileNotFoundException) {
             Log.e(TAG, "File Not Found: $e")
