@@ -74,19 +74,19 @@ class _AppState extends State<_App> {
               setState(() {});
             }),
         ElevatedText(
-            text: 'initialize(AudioSource.capture)',
+            text: 'initialize(FlAudioSource.capture)',
             onPressed: () async {
               final result =
-                  await recording.initialize(source: AudioSource.capture);
-              text = "initialize(AudioSource.capture) : $result";
+                  await recording.initialize(source: FlAudioSource.capture);
+              text = "initialize(FlAudioSource.capture) : $result";
               setState(() {});
             }),
         ElevatedText(
-            text: 'initialize(AudioSource.microphone)',
+            text: 'initialize(FlAudioSource.microphone)',
             onPressed: () async {
               final result =
-                  await recording.initialize(source: AudioSource.microphone);
-              text = "initialize(AudioSource.microphone) : $result";
+                  await recording.initialize(source: FlAudioSource.microphone);
+              text = "initialize(FlAudioSource.microphone) : $result";
               setState(() {});
             }),
         ElevatedText(

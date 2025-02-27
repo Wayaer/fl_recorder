@@ -59,7 +59,7 @@ class AudioDescribe {
 }
 
 /// Audio 来源
-enum AudioSource {
+enum FlAudioSource {
   /// 麦克风录音
   microphone,
 
@@ -85,7 +85,8 @@ class FlRecorder {
   bool get isRecording => _isRecording;
 
   /// 初始化 前台任务 和录音工具
-  Future<bool> initialize({AudioSource source = AudioSource.capture}) async {
+  Future<bool> initialize(
+      {FlAudioSource source = FlAudioSource.capture}) async {
     final flEvent = await FlChannel().initFlEvent();
     flEvent?.listen(_onData, onError: _onError, onDone: _onDone);
     final result = await _channel
