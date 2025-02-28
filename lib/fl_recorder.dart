@@ -80,7 +80,7 @@ class FlRecorder {
 
   final MethodChannel _channel = MethodChannel('fl.recorder');
 
-  final String _eventName = 'fl.recorder/event';
+  final String _eventName = 'fl.recorder.event';
 
   bool _isRecording = false;
 

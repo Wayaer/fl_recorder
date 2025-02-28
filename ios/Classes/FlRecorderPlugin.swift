@@ -6,6 +6,7 @@ import ReplayKit
 
 public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate, RPPreviewViewControllerDelegate {
     var channel: FlutterMethodChannel
+    var flEventChannel: FlEventChannel?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "fl.recorder", binaryMessenger: registrar.messenger())
@@ -18,12 +19,25 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         super.init()
     }
 
+    // 音频来源
+    var audioSource: Int = 0
+
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "initialize":
-            break
+            if flEventChannel == nil {
+                flEventChannel = FlChannelPlugin.getEventChannel("fl.recorder.event")
+            }
+            let args = call.arguments as! [String: Any]
+            audioSource = args["source"] as! Int
+            result(true)
         case "startRecording":
-            break
+
+            if audioSource == 0 {
+                result(startAudioRecording())
+            } else if audioSource == 1 {
+                startScreenRecording(result)
+            }
         case "stopRecording":
             audioRecorder?.stop()
         case "dispose":
@@ -118,12 +132,11 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         let newData = fileHandle.readData(ofLength: Int(fileSize) - lastReadOffset)
         fileHandle.closeFile()
         if !newData.isEmpty {
-            FlEvent..shared.flEvent?.send([
+            _ = flEventChannel?.send([
                 "byte": newData,
                 "timeMillis": recordingDuration,
                 "length": newData.count
             ])
-
             lastReadOffset = Int(fileSize)
         }
     }
@@ -145,7 +158,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     var screenRecorder = RPScreenRecorder.shared()
 
     // 开始录制
-    func startScreenRecording() {
+    func startScreenRecording(_ result: @escaping FlutterResult) {
         if screenRecorder.isAvailable {
             screenRecorder.startRecording { error in
                 if let error = error {
@@ -153,7 +166,10 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
                 } else {
                     print("System audio recording started.")
                 }
+                result(error == nil)
             }
+        } else {
+            result(false)
         }
     }
 
