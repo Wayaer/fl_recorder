@@ -7,25 +7,36 @@ import 'package:fl_recorder/fl_recorder.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MaterialApp(
-      navigatorKey: FlExtended().navigatorKey,
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-          appBar: AppBar(title: const Text('FlRecorder Plugin example')),
-          body: const Padding(
-            padding: EdgeInsets.all(12),
-            child: SingleChildScrollView(child: _App()),
-          ))));
+  runApp(App());
 }
 
-class _App extends StatefulWidget {
-  const _App();
+class App extends StatelessWidget {
+  const App({super.key});
 
   @override
-  State<_App> createState() => _AppState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        navigatorKey: FlExtended().navigatorKey,
+        debugShowCheckedModeBanner: false,
+        darkTheme: ThemeData.dark(),
+        theme: ThemeData.light(),
+        home: Scaffold(
+            appBar: AppBar(title: const Text('FlRecorder Plugin example')),
+            body: const Padding(
+              padding: EdgeInsets.all(12),
+              child: SingleChildScrollView(child: HomePage()),
+            )));
+  }
 }
 
-class _AppState extends State<_App> {
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   final recording = FlRecorder();
   List<int> byte = [];
   List<double> amplitude = [];
@@ -55,15 +66,13 @@ class _AppState extends State<_App> {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      Container(
-          height: 140,
-          width: double.infinity,
-          alignment: Alignment.center,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-              shape: BoxShape.rectangle,
-              color: Colors.black12.withValues(alpha: 0.1)),
-          child: Text(text)),
+      Card(
+          child: Container(
+              height: 140,
+              width: double.infinity,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(10),
+              child: Text(text))),
       Wrap(runSpacing: 10, spacing: 10, children: [
         if (isAndroid)
           ElevatedText(
@@ -136,23 +145,6 @@ class _AppState extends State<_App> {
           player.dispositionStream();
         });
   }
-}
-
-class Partition extends StatelessWidget {
-  const Partition(this.title, {super.key, this.onTap});
-
-  final String title;
-  final GestureTapCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => Universal(
-      onTap: onTap,
-      width: double.infinity,
-      color: Colors.grey.withValues(alpha: 0.2),
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      margin: const EdgeInsets.symmetric(vertical: 20),
-      child: BText(title, fontWeight: FontWeight.bold));
 }
 
 class ElevatedText extends StatelessWidget {
