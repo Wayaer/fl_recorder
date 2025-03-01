@@ -102,6 +102,7 @@ class _HomePageState extends State<HomePage> {
         ElevatedText(
             text: 'startRecording',
             onPressed: () async {
+              recorder.openRecorder();
               final result = await recording.startRecording();
               text = "startRecording : $result";
               debugPrint(text);
@@ -128,6 +129,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   final player = FlutterSoundPlayer();
+  final recorder = FlutterSoundRecorder();
 
   void playRecordData() async {
     if (byte.isEmpty) {

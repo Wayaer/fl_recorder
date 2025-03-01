@@ -37,13 +37,13 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
 
 SPEC CHECKSUMS:
-  fl_channel: fba19606ea05989cc9129cbd75bcee437df82dd5
-  fl_recorder: a93de5f11433248a75855419f5d34e0fd723ac19
+  fl_channel: d2c680e912d497be8eddea6b545ffc75dd251f8e
+  fl_recorder: 71f6385f3958a11baf441c3ed175498c883dd4ed
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  flutter_sound: 094823bc99ca323422808f386c6f597ea157dc49
+  flutter_sound: 9e4f2c89d07c223eb42bf78ea1cd6226034a4911
   flutter_sound_core: 8d3c08efc430a06debc49a627f9b651b542e8351
-  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
 
-PODFILE CHECKSUM: eb066d2697ae10d03e3cd3cde50a9496e09feff4
+PODFILE CHECKSUM: 5a35c580073c859afffb38a6a140f34612def22c
 
 COCOAPODS: 1.16.2

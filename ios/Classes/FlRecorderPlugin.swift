@@ -3,7 +3,6 @@ import CoreLocation
 import fl_channel
 import Flutter
 import ReplayKit
-
 public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate, RPPreviewViewControllerDelegate {
     var channel: FlutterMethodChannel
     var flEventChannel: FlEventChannel?
@@ -19,9 +18,6 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         super.init()
     }
 
-    // 音频来源
-    var audioSource: Int = 0
-
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "initialize":
@@ -29,19 +25,16 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
                 flEventChannel = FlChannelPlugin.getEventChannel("fl.recorder.event")
             }
             let args = call.arguments as! [String: Any]
-            audioSource = args["source"] as! Int
+            audioSource = args["source"] as? Int
             result(true)
         case "startRecording":
-
-            if audioSource == 0 {
-                result(startAudioRecording())
-            } else if audioSource == 1 {
-                startScreenRecording(result)
-            }
+            startRecording(result)
         case "stopRecording":
-            audioRecorder?.stop()
+            stopRecording()
+            result(true)
         case "dispose":
-            break
+            destroy()
+            result(true)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -51,73 +44,113 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         channel.setMethodCallHandler(nil)
     }
 
-    func destroy() {
-        stopAudioRecording()
-        stopScreenRecording()
-        timer?.invalidate()
-        timer = nil
-        recordingDuration = 0
+    // 音频来源
+    var audioSource: Int?
+    // 添加时长记录相关的变量
+    var startTime: TimeInterval?
+    var accumulatedTime: TimeInterval = 0.0
+
+    var isRecording: Bool = false
+
+    func startRecording(_ result: @escaping FlutterResult) {
+        if isRecording || audioSource == nil {
+            result(false)
+            return
+        }
+        isRecording = true
+        _ = flEventChannel?.send(true)
+        if audioSource == 0 {
+            startAudioRecording(result)
+        } else if audioSource == 1 {
+            startScreenRecording(result)
+        }
     }
 
-    // 添加时长记录相关的变量
-    var recordingStartTime: Date?
-    var recordingDuration: TimeInterval = 0.0
+    func stopRecording() {
+        /// 录音结束录制
+        timer?.invalidate()
+        timer = nil
+        lastReadOffset = 0
+        recordingUrl = nil
+        isRecording = false
+        if audioRecorder?.isRecording ?? false {
+            audioRecorder?.stop()
+            audioRecorder?.deleteRecording()
+        }
+        /// 录屏结束录制
+        if screenRecorder.isRecording {
+            screenRecorder.stopCapture()
+            screenRecorder.stopRecording()
+        }
+        /// 记录累计时间
+        accumulatedTime = Date().timeIntervalSince1970 - startTime!
+    }
+
+    func destroy() {
+        audioSource = nil
+        stopRecording()
+        startTime = nil
+        isRecording = false
+        accumulatedTime = 0
+        flEventChannel?.cancel()
+        flEventChannel = nil
+    }
+
     /// ------------------------- AudioRecorder ------------------------ ///
     var audioRecorder: AVAudioRecorder?
     var timer: Timer?
-    var segmentDuration: TimeInterval = 1.0 // 数据片段的时间间隔（秒）
+    var segmentDuration: TimeInterval = 0.5 // 数据片段的时间间隔（秒）
     var lastReadOffset: Int = 0 // 上次读取的偏移量
     var recordingUrl: URL?
 
     // 开始麦克风录音
-    func startAudioRecording() -> Bool {
+    func startAudioRecording(_ result: @escaping FlutterResult) {
         let audioSession = AVAudioSession.sharedInstance()
+        audioSession.requestRecordPermission { granted in
+            if granted {
+                do {
+                    try audioSession.setCategory(.record, mode: .default, options: .duckOthers)
+                    try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                    UIApplication.shared.beginBackgroundTask(withName: "BackgroundAudio") {
+                        // 后台任务结束时的清理工作
+                        print("Background task ended.")
+                    }
+                    print("Audio session configured for recording.")
+                } catch {
+                    print("Error configuring audio session: \(error)")
+                    result(false)
+                    return
+                }
+                // 录音文件的存储路径
+                let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("recording.pcm")
+                self.recordingUrl = fileURL
+                let settings: [String: Any] = [
+                    AVFormatIDKey: NSNumber(value: kAudioFormatLinearPCM),
+                    // 设置格式为 PCM
+                    AVSampleRateKey: NSNumber(value: 16000.0), // 设置采样率为 16kHz
+                    AVNumberOfChannelsKey: NSNumber(value: 1), // 设置为单声道
+                    AVLinearPCMBitDepthKey: NSNumber(value: 16), // 设置每个样本的位深度为 16
+                    AVLinearPCMIsBigEndianKey: NSNumber(value: false), // 设置为小端序（通常是小端）
+                    AVLinearPCMIsFloatKey: NSNumber(value: false) // 设置为整数 PCM
+                ]
 
-        do {
-            try audioSession.setCategory(.record, mode: .default, options: .duckOthers)
-            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-            UIApplication.shared.beginBackgroundTask(withName: "BackgroundAudio") {
-                // 后台任务结束时的清理工作
-                print("Background task ended.")
+                do {
+                    self.audioRecorder = try AVAudioRecorder(url: fileURL, settings: settings)
+                    self.audioRecorder?.delegate = self
+                    // 启动定时器
+                    self.timer = Timer.scheduledTimer(timeInterval: self.segmentDuration, target: self, selector: #selector(self.readAudioSegment), userInfo: nil, repeats: true)
+                    // 开始计时
+                    self.startTime = Date().timeIntervalSince1970
+                    self.audioRecorder?.record()
+                    result(true)
+                    return
+                } catch {
+                    print("Error starting recording: \(error)")
+                }
+                result(false)
+            } else {
+                result(false)
             }
-
-            print("Audio session configured for recording.")
-        } catch {
-            print("Error configuring audio session: \(error)")
-            return false
-        }
-        // 录音文件的存储路径
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("audioRecording.m4a")
-        recordingUrl = fileURL
-        let settings: [String: Any] = [
-            AVFormatIDKey: Int(kAudioFormatLinearPCM),
-            AVSampleRateKey: 16000,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-        ]
-
-        do {
-            audioRecorder = try AVAudioRecorder(url: fileURL, settings: settings)
-            audioRecorder?.delegate = self
-            audioRecorder?.record()
-            // 启动定时器
-            timer = Timer.scheduledTimer(timeInterval: segmentDuration, target: self, selector: #selector(readAudioSegment), userInfo: nil, repeats: true)
-            // 开始计时
-            recordingStartTime = Date()
-            print("Recording started.")
-            return true
-        } catch {
-            print("Error starting recording: \(error)")
-        }
-        return false
-    }
-
-    func stopAudioRecording() {
-        audioRecorder?.stop()
-        // 停止计时
-        if let startTime = recordingStartTime {
-            recordingDuration += Date().timeIntervalSince(startTime)
-            recordingStartTime = nil
         }
     }
 
@@ -128,31 +161,35 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
 
         let fileSize = fileHandle.seekToEndOfFile()
         fileHandle.seek(toFileOffset: UInt64(lastReadOffset))
-
         let newData = fileHandle.readData(ofLength: Int(fileSize) - lastReadOffset)
-        fileHandle.closeFile()
+        var time = Date().timeIntervalSince1970 - startTime!
+        time += accumulatedTime
         if !newData.isEmpty {
             _ = flEventChannel?.send([
                 "byte": newData,
-                "timeMillis": recordingDuration,
+                "timeMillis": Int(time * 1000),
                 "length": newData.count
             ])
             lastReadOffset = Int(fileSize)
         }
+        fileHandle.closeFile()
     }
 
-    public func audioRecorderBeginInterruption(_ recorder: AVAudioRecorder) {}
-    public func audioRecorderEndInterruption(_ recorder: AVAudioRecorder, withOptions flags: Int) {}
+    public func audioRecorderBeginInterruption(_ recorder: AVAudioRecorder) {
+        _ = flEventChannel?.send(true)
+    }
+
+    public func audioRecorderEndInterruption(_ recorder: AVAudioRecorder, withOptions flags: Int) {
+        _ = flEventChannel?.send(false)
+    }
 
     public func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
-        if flag {
-            print("Recording finished successfully.")
-        } else {
-            print("Recording failed.")
-        }
+        _ = flEventChannel?.send(false)
     }
 
-    public func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: (any Error)?) {}
+    public func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: (any Error)?) {
+        _ = flEventChannel?.send(false)
+    }
 
     /// ------------------------- ScreenRecorder ------------------------ ///
     var screenRecorder = RPScreenRecorder.shared()

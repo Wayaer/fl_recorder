@@ -46,8 +46,16 @@ class AudioRecorder(private val context: Context) {
         getFlEventChannel()
         if (mRecorder == null) {
             if (checkSelfPermission()) {
-                bufferSize = AudioRecord.getMinBufferSize(RECORDER_SAMPLE_RATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING)
-                mRecorder = AudioRecord(MediaRecorder.AudioSource.DEFAULT, RECORDER_SAMPLE_RATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING, bufferSize)
+                bufferSize = AudioRecord.getMinBufferSize(
+                    RECORDER_SAMPLE_RATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING
+                )
+                mRecorder = AudioRecord(
+                    MediaRecorder.AudioSource.DEFAULT,
+                    RECORDER_SAMPLE_RATE,
+                    RECORDER_CHANNELS,
+                    RECORDER_AUDIO_ENCODING,
+                    bufferSize
+                )
             }
         }
         return this.mRecorder != null
@@ -57,17 +65,35 @@ class AudioRecorder(private val context: Context) {
         getFlEventChannel()
         if (mRecorder == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             if (checkSelfPermission()) {
-                val config = AudioPlaybackCaptureConfiguration.Builder(mProjection!!).addMatchingUsage(AudioAttributes.USAGE_MEDIA).addMatchingUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY).addMatchingUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE).addMatchingUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION).addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE).addMatchingUsage(AudioAttributes.USAGE_ALARM).addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT).addMatchingUsage(AudioAttributes.USAGE_GAME).addMatchingUsage(AudioAttributes.USAGE_ASSISTANT).addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION).addMatchingUsage(AudioAttributes.USAGE_UNKNOWN).build()
-                val format = AudioFormat.Builder().setEncoding(RECORDER_AUDIO_ENCODING).setSampleRate(RECORDER_SAMPLE_RATE).setChannelMask(RECORDER_CHANNELS).build()
-                bufferSize = AudioRecord.getMinBufferSize(RECORDER_SAMPLE_RATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING)
-                mRecorder = AudioRecord.Builder().setAudioFormat(format).setBufferSizeInBytes(bufferSize).setAudioPlaybackCaptureConfig(config).build()
+                val config = AudioPlaybackCaptureConfiguration.Builder(mProjection!!)
+                    .addMatchingUsage(AudioAttributes.USAGE_MEDIA)
+                    .addMatchingUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
+                    .addMatchingUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+                    .addMatchingUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                    .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                    .addMatchingUsage(AudioAttributes.USAGE_ALARM)
+                    .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                    .addMatchingUsage(AudioAttributes.USAGE_GAME)
+                    .addMatchingUsage(AudioAttributes.USAGE_ASSISTANT)
+                    .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION)
+                    .addMatchingUsage(AudioAttributes.USAGE_UNKNOWN).build()
+                val format = AudioFormat.Builder().setEncoding(RECORDER_AUDIO_ENCODING)
+                    .setSampleRate(RECORDER_SAMPLE_RATE).setChannelMask(RECORDER_CHANNELS).build()
+                bufferSize = AudioRecord.getMinBufferSize(
+                    RECORDER_SAMPLE_RATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING
+                )
+                mRecorder =
+                    AudioRecord.Builder().setAudioFormat(format).setBufferSizeInBytes(bufferSize)
+                        .setAudioPlaybackCaptureConfig(config).build()
             }
         }
         return mRecorder != null
     }
 
     private fun checkSelfPermission(): Boolean {
-        return ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+        return ActivityCompat.checkSelfPermission(
+            context, Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED;
     }
 
     fun startRecording(): Boolean {
@@ -85,8 +111,6 @@ class AudioRecorder(private val context: Context) {
     }
 
     fun stopRecording(): Boolean {
-        if (!isRecording) return false
-        isAddTime = false
         isRecording = false
         mRecorder?.stop()
         accumulatedTime += System.currentTimeMillis() - startTime!!
@@ -103,11 +127,11 @@ class AudioRecorder(private val context: Context) {
         accumulatedTime = 0
         flEventChannel?.cancel()
         flEventChannel = null
+        startTime = null
     }
 
     private var accumulatedTime: Long = 0
     private var startTime: Long? = null
-    private var isAddTime = false;
 
     private fun shortToByte(data: ShortArray): ByteArray {
         val arraySize = data.size
@@ -125,14 +149,15 @@ class AudioRecorder(private val context: Context) {
             val byte = ByteArray(bufferSize)
             while (isRecording) {
                 val length = mRecorder!!.read(byte, 0, bufferSize)
-                val currentTime = System.currentTimeMillis()
-                var time = currentTime - startTime!!
+                var time = System.currentTimeMillis() - startTime!!
                 time += accumulatedTime
-                flEventChannel?.send(mapOf(
-                    "byte" to byte,
-                    "timeMillis" to time,
-                    "length" to length,
-                ))
+                flEventChannel?.send(
+                    mapOf(
+                        "byte" to byte,
+                        "timeMillis" to time,
+                        "length" to length,
+                    )
+                )
             }
         } catch (e: FileNotFoundException) {
             Log.e(TAG, "File Not Found: $e")
