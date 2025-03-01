@@ -23,14 +23,10 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
+    compileSdk = 34
+
     if (project.android.hasProperty("namespace")) {
         namespace 'fl.recorder'
-    }
-
-    compileSdk 34
-
-    defaultConfig {
-        minSdk = 23
     }
 
     compileOptions {
@@ -38,8 +34,16 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    defaultConfig {
+        minSdk = 16
     }
 }
 

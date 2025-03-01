@@ -1,0 +1,49 @@
+PODS:
+  - fl_channel (0.0.1):
+    - Flutter
+  - fl_recorder (0.0.1):
+    - fl_channel
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_sound (9.23.1):
+    - Flutter
+    - flutter_sound_core (= 9.23.1)
+  - flutter_sound_core (9.23.1)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - fl_channel (from `.symlinks/plugins/fl_channel/ios`)
+  - fl_recorder (from `.symlinks/plugins/fl_recorder/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_sound (from `.symlinks/plugins/flutter_sound/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+
+SPEC REPOS:
+  trunk:
+    - flutter_sound_core
+
+EXTERNAL SOURCES:
+  fl_channel:
+    :path: ".symlinks/plugins/fl_channel/ios"
+  fl_recorder:
+    :path: ".symlinks/plugins/fl_recorder/ios"
+  Flutter:
+    :path: Flutter
+  flutter_sound:
+    :path: ".symlinks/plugins/flutter_sound/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+
+SPEC CHECKSUMS:
+  fl_channel: fba19606ea05989cc9129cbd75bcee437df82dd5
+  fl_recorder: a93de5f11433248a75855419f5d34e0fd723ac19
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_sound: 094823bc99ca323422808f386c6f597ea157dc49
+  flutter_sound_core: 8d3c08efc430a06debc49a627f9b651b542e8351
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+
+PODFILE CHECKSUM: eb066d2697ae10d03e3cd3cde50a9496e09feff4
+
+COCOAPODS: 1.16.2

@@ -1,4 +1,4 @@
-package com.fl.recorder.example
+package fl.recorder.example
 
 import io.flutter.embedding.android.FlutterActivity
 

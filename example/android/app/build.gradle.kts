@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.fl.recorder.example"
+    namespace = "fl.recorder.example"
     compileSdk = flutter.compileSdkVersion
 
     compileOptions {
@@ -18,8 +18,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.fl.recorder.example"
-        minSdk = 23
+        applicationId = "fl.recorder.example"
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
