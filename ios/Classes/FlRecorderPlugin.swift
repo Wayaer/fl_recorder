@@ -3,7 +3,7 @@ import CoreLocation
 import fl_channel
 import Flutter
 import ReplayKit
-public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate, RPPreviewViewControllerDelegate {
+public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate, RPScreenRecorderDelegate {
     var channel: FlutterMethodChannel
     var flEventChannel: FlEventChannel?
 
@@ -189,6 +189,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
 
     public func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: (any Error)?) {
         _ = flEventChannel?.send(false)
+        stopRecording()
     }
 
     /// ------------------------- ScreenRecorder ------------------------ ///
@@ -197,10 +198,13 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     // 开始录制
     func startScreenRecording(_ result: @escaping FlutterResult) {
         if screenRecorder.isAvailable {
-            screenRecorder.startRecording { error in
+            screenRecorder.delegate = self
+            screenRecorder.startRecording { [self] error in
                 if let error = error {
                     print("Error starting recording: \(error)")
                 } else {
+                    isRecording = true
+                    _ = flEventChannel?.send(true)
                     print("System audio recording started.")
                 }
                 result(error == nil)
@@ -210,14 +214,19 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         }
     }
 
-    // 停止录制
-    func stopScreenRecording() {
-        screenRecorder.stopRecording { _, _ in
-        }
+    public func screenRecorderDidChangeAvailability(_ screenRecorder: RPScreenRecorder) {
+        print("=======screenRecorderDidChangeAvailability")
+//        _ = flEventChannel?.send(true)
     }
 
-    // 处理预览
-    public func previewControllerDidFinish(_ previewController: RPPreviewViewController) {
-        print("Preview finished.")
+    public func screenRecorder(_ screenRecorder: RPScreenRecorder, didStopRecordingWith previewViewController: RPPreviewViewController?, error: (any Error)?) {
+        print("=======screenRecorder  didStopRecordingWith")
+        _ = flEventChannel?.send(false)
+    }
+
+    public func screenRecorder(_ screenRecorder: RPScreenRecorder, didStopRecordingWithError error: any Error, previewViewController: RPPreviewViewController?) {
+        print("=======screenRecorder  didStopRecordingWithError")
+        _ = flEventChannel?.send(false)
+        stopRecording()
     }
 }
