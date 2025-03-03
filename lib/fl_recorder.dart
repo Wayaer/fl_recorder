@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:fl_channel/fl_channel.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class AudioDescribe {
@@ -91,15 +92,17 @@ class FlRecorder {
   /// 初始化 前台任务 和录音工具
   Future<bool> initialize(
       {FlAudioSource source = FlAudioSource.capture}) async {
+    if (!_supportPlatform) return false;
     _flEventChannel = await FlChannel().create(_eventName);
     _flEventChannel?.listen(_onData, onError: _onError, onDone: _onDone);
-    final result = await _channel
-        .invokeMethod<bool>('initialize', {'source': source.index});
+    final result = await _channel.invokeMethod<bool>(
+        'initialize', {'source': _isIOS ? 0 : source.index});
     return _flEventChannel != null && (result ?? false);
   }
 
   /// 请求忽略电池优化
   Future<bool> requestIgnoreBatteryOptimizations() async {
+    if (!_isAndroid) return false;
     final result =
         await _channel.invokeMethod<bool>('requestIgnoreBatteryOptimizations');
     return result ?? false;
@@ -107,18 +110,21 @@ class FlRecorder {
 
   /// 开始录音 停止后可重新开启录音
   Future<bool> startRecording() async {
+    if (!_supportPlatform) return false;
     final result = await _channel.invokeMethod<bool>('startRecording');
     return result ?? false;
   }
 
   /// 停止录音 开启录音后可停止录音
   Future<bool> stopRecording() async {
+    if (!_supportPlatform) return false;
     final result = await _channel.invokeMethod<bool>('stopRecording');
     return result ?? false;
   }
 
   /// 完全注销录音和前台任务
   Future<bool> dispose({bool disposeEvent = true}) async {
+    if (!_supportPlatform) return false;
     final result = await _channel.invokeMethod<bool>('dispose');
     if (disposeEvent) {
       Future.delayed(const Duration(seconds: 1), () {
@@ -158,3 +164,10 @@ class FlRecorder {
     }
   }
 }
+
+bool get _supportPlatform => _isAndroid || _isIOS;
+
+bool get _isAndroid =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
