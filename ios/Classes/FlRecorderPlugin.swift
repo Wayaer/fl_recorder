@@ -199,16 +199,25 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     func startScreenRecording(_ result: @escaping FlutterResult) {
         if screenRecorder.isAvailable {
             screenRecorder.delegate = self
-            screenRecorder.startRecording { [self] error in
+            screenRecorder.isMicrophoneEnabled = false
+
+            screenRecorder.startCapture(handler: { [self] buffer, bufferType, error in
                 if let error = error {
-                    print("Error starting recording: \(error)")
+                    isRecording = false
+                    _ = flEventChannel?.send(false)
                 } else {
-                    isRecording = true
-                    _ = flEventChannel?.send(true)
-                    print("System audio recording started.")
+                    switch bufferType {
+                    case .audioApp:
+                        convertSampleBufferToNSData(buffer)
+                    case .video:
+                        break
+                    case .audioMic:
+                        break
+                    @unknown default:
+                        break
+                    }
                 }
-                result(error == nil)
-            }
+            })
         } else {
             result(false)
         }
@@ -228,5 +237,20 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         print("=======screenRecorder  didStopRecordingWithError")
         _ = flEventChannel?.send(false)
         stopRecording()
+    }
+
+    // 将 sampleBuffer 转换为 NSData
+    func convertSampleBufferToNSData(_ sampleBuffer: CMSampleBuffer) -> NSData? {
+        guard let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else { return nil }
+
+        var length = 0
+        var dataPointer: UnsafeMutablePointer<UInt8>?
+        let status = CMBlockBufferGetDataPointer(blockBuffer, atOffset: 0, lengthAtOffset: nil, totalLength: &length, dataPointerOut: &dataPointer)
+
+        if status != kCMBlockBufferNoErr {
+            return nil
+        }
+
+        return NSData(bytes: dataPointer, length: length)
     }
 }
