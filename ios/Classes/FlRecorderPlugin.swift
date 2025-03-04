@@ -201,21 +201,21 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
             screenRecorder.delegate = self
             screenRecorder.isMicrophoneEnabled = false
 
-            screenRecorder.startCapture(handler: { [self] buffer, bufferType, error in
+            screenRecorder.startCapture(handler: { [self] _, bufferType, error in
                 if let error = error {
                     isRecording = false
                     _ = flEventChannel?.send(false)
                 } else {
-                    switch bufferType {
-                    case .audioApp:
-                        convertSampleBufferToNSData(buffer)
-                    case .video:
-                        break
-                    case .audioMic:
-                        break
-                    @unknown default:
-                        break
-                    }
+//                     switch bufferType {
+//                     case .audioApp:
+// //                         convertSampleBufferToNSData(buffer)
+//                     case .video:
+//                         break
+//                     case .audioMic:
+//                         break
+//                     @unknown default:
+//                         break
+//                     }
                 }
             })
         } else {
@@ -240,17 +240,17 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     }
 
     // 将 sampleBuffer 转换为 NSData
-    func convertSampleBufferToNSData(_ sampleBuffer: CMSampleBuffer) -> NSData? {
-        guard let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else { return nil }
-
-        var length = 0
-        var dataPointer: UnsafeMutablePointer<UInt8>?
-        let status = CMBlockBufferGetDataPointer(blockBuffer, atOffset: 0, lengthAtOffset: nil, totalLength: &length, dataPointerOut: &dataPointer)
-
-        if status != kCMBlockBufferNoErr {
-            return nil
-        }
-
-        return NSData(bytes: dataPointer, length: length)
-    }
+//     func convertSampleBufferToNSData(_ sampleBuffer: CMSampleBuffer) -> NSData? {
+//         guard let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else { return nil }
+//
+//         var length = 0
+//         var dataPointer: UnsafeMutablePointer<UInt8>?
+//         let status = CMBlockBufferGetDataPointer(blockBuffer, atOffset: 0, lengthAtOffset: nil, totalLength: &length, dataPointerOut: &dataPointer)
+//
+//         if status != kCMBlockBufferNoErr {
+//             return nil
+//         }
+//
+//         return NSData(bytes: dataPointer, length: length)
+//     }
 }
