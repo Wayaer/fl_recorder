@@ -11,8 +11,8 @@ Using microphone recording and system audio capture on Flutter,The frontend serv
 
 /// Initialize
 void initialize() {
-  FlRecorder().initialize(source: AudioSource.capture);
-  FlRecorder().initialize(source: AudioSource.microphone);
+  FlRecorder().initialize(source: FlAudioSource.capture);
+  FlRecorder().initialize(source: FlAudioSource.microphone);
 }
 
 /// Data stream

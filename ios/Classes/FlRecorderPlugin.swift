@@ -113,11 +113,11 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
                     try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
                     UIApplication.shared.beginBackgroundTask(withName: "BackgroundAudio") {
                         // 后台任务结束时的清理工作
-                        print("Background task ended.")
+                        // print("Background task ended.")
                     }
-                    print("Audio session configured for recording.")
+                    // print("Audio session configured for recording.")
                 } catch {
-                    print("Error configuring audio session: \(error)")
+                    // print("Error configuring audio session: \(error)")
                     result(false)
                     return
                 }
@@ -224,17 +224,17 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     }
 
     public func screenRecorderDidChangeAvailability(_ screenRecorder: RPScreenRecorder) {
-        print("=======screenRecorderDidChangeAvailability")
+        // print("=======screenRecorderDidChangeAvailability")
 //        _ = flEventChannel?.send(true)
     }
 
     public func screenRecorder(_ screenRecorder: RPScreenRecorder, didStopRecordingWith previewViewController: RPPreviewViewController?, error: (any Error)?) {
-        print("=======screenRecorder  didStopRecordingWith")
+        // print("=======screenRecorder  didStopRecordingWith")
         _ = flEventChannel?.send(false)
     }
 
     public func screenRecorder(_ screenRecorder: RPScreenRecorder, didStopRecordingWithError error: any Error, previewViewController: RPPreviewViewController?) {
-        print("=======screenRecorder  didStopRecordingWithError")
+        // print("=======screenRecorder  didStopRecordingWithError")
         _ = flEventChannel?.send(false)
         stopRecording()
     }
