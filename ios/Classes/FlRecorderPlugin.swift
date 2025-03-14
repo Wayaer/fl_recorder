@@ -66,29 +66,46 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         }
     }
 
+    var backgroundTaskIdentifier: UIBackgroundTaskIdentifier?
+
     func stopRecording() {
+        if audioSource == 0 {
+            audioRecorder?.stop()
+            audioRecorder?.deleteRecording()
+
+            // 结束音频会话
+            do {
+                try audioSession.setCategory(.playAndRecord)
+                try audioSession.setActive(false)
+            } catch {
+                print("Failed to deactivate audio session: \(error)")
+            }
+        } else if audioSource == 1 {
+            /// 录屏结束录制
+            if screenRecorder.isRecording {
+                screenRecorder.stopCapture()
+                screenRecorder.stopRecording()
+            }
+        }
+        if backgroundTaskIdentifier != nil {
+            UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier!)
+            backgroundTaskIdentifier = nil
+        }
+
+        /// 记录累计时间
+        accumulatedTime = Date().timeIntervalSince1970 - startTime!
         /// 录音结束录制
         timer?.invalidate()
         timer = nil
         lastReadOffset = 0
         recordingUrl = nil
         isRecording = false
-        if audioRecorder?.isRecording ?? false {
-            audioRecorder?.stop()
-            audioRecorder?.deleteRecording()
-        }
-        /// 录屏结束录制
-        if screenRecorder.isRecording {
-            screenRecorder.stopCapture()
-            screenRecorder.stopRecording()
-        }
-        /// 记录累计时间
-        accumulatedTime = Date().timeIntervalSince1970 - startTime!
     }
 
     func destroy() {
-        audioSource = nil
         stopRecording()
+        accumulatedTime = 0.0
+        audioSource = nil
         startTime = nil
         isRecording = false
         accumulatedTime = 0
@@ -102,18 +119,17 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     var segmentDuration: TimeInterval = 0.5 // 数据片段的时间间隔（秒）
     var lastReadOffset: Int = 0 // 上次读取的偏移量
     var recordingUrl: URL?
-
+    let audioSession = AVAudioSession.sharedInstance()
     // 开始麦克风录音
     func startAudioRecording(_ result: @escaping FlutterResult) {
-        let audioSession = AVAudioSession.sharedInstance()
         audioSession.requestRecordPermission { granted in
             if granted {
                 do {
-                    try audioSession.setCategory(.record, mode: .default, options: .duckOthers)
-                    try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-                    UIApplication.shared.beginBackgroundTask(withName: "BackgroundAudio") {
+                    try self.audioSession.setCategory(.record, mode: .default)
+                    try self.audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                    self.backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(withName: "BackgroundAudio") {
                         // 后台任务结束时的清理工作
-                        // print("Background task ended.")
+                        print("Background task ended.")
                     }
                     // print("Audio session configured for recording.")
                 } catch {
@@ -145,6 +161,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
                     result(true)
                     return
                 } catch {
+                    self.stopRecording()
                     print("Error starting recording: \(error)")
                 }
                 result(false)
@@ -201,14 +218,14 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
             screenRecorder.delegate = self
             screenRecorder.isMicrophoneEnabled = false
 
-            screenRecorder.startCapture(handler: { [self] _, bufferType, error in
+            screenRecorder.startCapture(handler: { [self] _, _, error in
                 if let error = error {
                     isRecording = false
                     _ = flEventChannel?.send(false)
                 } else {
 //                     switch bufferType {
 //                     case .audioApp:
-// //                         convertSampleBufferToNSData(buffer)
+                    // //                         convertSampleBufferToNSData(buffer)
 //                     case .video:
 //                         break
 //                     case .audioMic:
