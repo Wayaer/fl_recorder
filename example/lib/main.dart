@@ -78,21 +78,24 @@ class _HomePageState extends State<HomePage> {
           ElevatedText(
               text: 'requestIgnoreBatteryOptimizations',
               onPressed: () async {
-                final result = await recording.requestIgnoreBatteryOptimizations();
+                final result =
+                    await recording.requestIgnoreBatteryOptimizations();
                 text = "requestIgnoreBatteryOptimizations : $result";
                 setState(() {});
               }),
         ElevatedText(
             text: 'initialize(FlAudioSource.capture)',
             onPressed: () async {
-              final result = await recording.initialize(source: FlAudioSource.capture);
+              final result =
+                  await recording.initialize(source: FlAudioSource.capture);
               text = "initialize(FlAudioSource.capture) : $result";
               setState(() {});
             }),
         ElevatedText(
             text: 'initialize(FlAudioSource.microphone)',
             onPressed: () async {
-              final result = await recording.initialize(source: FlAudioSource.microphone);
+              final result =
+                  await recording.initialize(source: FlAudioSource.microphone);
               text = "initialize(FlAudioSource.microphone) : $result";
               setState(() {});
             }),
@@ -153,5 +156,6 @@ class ElevatedText extends StatelessWidget {
   final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) => ElevatedButton(onPressed: onPressed, child: Text(text));
+  Widget build(BuildContext context) =>
+      ElevatedButton(onPressed: onPressed, child: Text(text));
 }

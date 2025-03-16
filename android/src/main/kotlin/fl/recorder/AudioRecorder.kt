@@ -125,7 +125,6 @@ class AudioRecorder(private val context: Context) {
         mRecorder = null
         recordingThread = null
         accumulatedTime = 0
-        flEventChannel?.cancel()
         flEventChannel = null
         startTime = null
     }

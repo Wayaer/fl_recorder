@@ -1,3 +1,7 @@
+## 0.1.2
+
+* Fix call `cancel` error
+
 ## 0.1.1
 
 * Fix: Unable to open audio session after recording on iOS

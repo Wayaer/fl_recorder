@@ -109,7 +109,6 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         startTime = nil
         isRecording = false
         accumulatedTime = 0
-        flEventChannel?.cancel()
         flEventChannel = nil
     }
 
