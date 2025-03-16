@@ -75,7 +75,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
 
             // 结束音频会话
             do {
-                try audioSession.setCategory(.playAndRecord)
+                try audioSession.setCategory(.playback, mode: .default, options: .mixWithOthers)
                 try audioSession.setActive(false)
             } catch {
                 print("Failed to deactivate audio session: \(error)")
