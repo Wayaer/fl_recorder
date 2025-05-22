@@ -25,7 +25,7 @@ class AudioRecorder(private val context: Context) {
     private var bufferSize = 1024
 
     companion object {
-        const val TAG: String = "System Audio Recording"
+        const val TAG: String = "FlRecorder:"
         private const val RECORDER_SAMPLE_RATE = 16000
         private const val RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO
         private const val RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT
@@ -100,7 +100,7 @@ class AudioRecorder(private val context: Context) {
         mRecorder?.startRecording()
         if (mRecorder != null) {
             recordingThread = null
-            recordingThread = Thread({ writeAudioFile() }, "System Audio Recording")
+            recordingThread = Thread({ writeAudioFile() }, "fl_recorder Audio Recording")
             recordingThread?.start()
         }
         return mRecorder != null
@@ -125,6 +125,7 @@ class AudioRecorder(private val context: Context) {
     private fun writeAudioFile() {
         try {
             val byte = ByteArray(bufferSize)
+            mRecorder!!.read(byte, 0, bufferSize)
             while (isRecording) {
                 flEventChannel?.send(
                     mapOf(
@@ -132,11 +133,8 @@ class AudioRecorder(private val context: Context) {
                     )
                 )
             }
-        } catch (e: FileNotFoundException) {
-            Log.e(TAG, "File Not Found: $e")
-            e.printStackTrace()
-        } catch (e: IOException) {
-            Log.e(TAG, "IO Exception: $e")
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception: $e")
             e.printStackTrace()
         }
     }
