@@ -14,8 +14,6 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import fl.channel.FlChannelPlugin
 import fl.channel.FlEventChannel
-import java.io.FileNotFoundException
-import java.io.IOException
 
 class AudioRecorder(private val context: Context) {
     private var isRecording: Boolean = false
@@ -90,7 +88,7 @@ class AudioRecorder(private val context: Context) {
     private fun checkSelfPermission(): Boolean {
         return ActivityCompat.checkSelfPermission(
             context, Manifest.permission.RECORD_AUDIO
-        ) == PackageManager.PERMISSION_GRANTED;
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     fun startRecording(): Boolean {
@@ -100,7 +98,7 @@ class AudioRecorder(private val context: Context) {
         mRecorder?.startRecording()
         if (mRecorder != null) {
             recordingThread = null
-            recordingThread = Thread({ writeAudioFile() }, "fl_recorder Audio Recording")
+            recordingThread = Thread({ writeAudioFile() }, "System Audio Recording")
             recordingThread?.start()
         }
         return mRecorder != null
@@ -113,7 +111,6 @@ class AudioRecorder(private val context: Context) {
         return mRecorder != null
     }
 
-
     fun destroy() {
         stopRecording()
         mRecorder?.release()
@@ -125,12 +122,10 @@ class AudioRecorder(private val context: Context) {
     private fun writeAudioFile() {
         try {
             val byte = ByteArray(bufferSize)
-            mRecorder!!.read(byte, 0, bufferSize)
             while (isRecording) {
+                mRecorder!!.read(byte, 0, bufferSize)
                 flEventChannel?.send(
-                    mapOf(
-                        "byte" to byte
-                    )
+                    mapOf("byte" to byte)
                 )
             }
         } catch (e: Exception) {
