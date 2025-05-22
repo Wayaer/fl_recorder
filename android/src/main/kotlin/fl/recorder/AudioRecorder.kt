@@ -16,9 +16,6 @@ import fl.channel.FlChannelPlugin
 import fl.channel.FlEventChannel
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.nio.ByteBuffer
-import kotlin.math.log10
-import kotlin.math.sqrt
 
 class AudioRecorder(private val context: Context) {
     private var isRecording: Boolean = false
@@ -98,7 +95,6 @@ class AudioRecorder(private val context: Context) {
 
     fun startRecording(): Boolean {
         if (isRecording) return false
-        startTime = System.currentTimeMillis()
         isRecording = true
         flEventChannel?.send(true)
         mRecorder?.startRecording()
@@ -113,7 +109,6 @@ class AudioRecorder(private val context: Context) {
     fun stopRecording(): Boolean {
         isRecording = false
         mRecorder?.stop()
-        accumulatedTime += System.currentTimeMillis() - startTime!!
         flEventChannel?.send(false)
         return mRecorder != null
     }
@@ -124,37 +119,16 @@ class AudioRecorder(private val context: Context) {
         mRecorder?.release()
         mRecorder = null
         recordingThread = null
-        accumulatedTime = 0
         flEventChannel = null
-        startTime = null
-    }
-
-    private var accumulatedTime: Long = 0
-    private var startTime: Long? = null
-
-    private fun shortToByte(data: ShortArray): ByteArray {
-        val arraySize = data.size
-        val bytes = ByteArray(arraySize * 2)
-        for (i in 0 until arraySize) {
-            bytes[i * 2] = (data[i].toInt() and 0x00FF).toByte()
-            bytes[i * 2 + 1] = (data[i].toInt() shr 8).toByte()
-            data[i] = 0
-        }
-        return bytes
     }
 
     private fun writeAudioFile() {
         try {
             val byte = ByteArray(bufferSize)
             while (isRecording) {
-                val length = mRecorder!!.read(byte, 0, bufferSize)
-                var time = System.currentTimeMillis() - startTime!!
-                time += accumulatedTime
                 flEventChannel?.send(
                     mapOf(
-                        "byte" to byte,
-                        "timeMillis" to time,
-                        "length" to length,
+                        "byte" to byte
                     )
                 )
             }

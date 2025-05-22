@@ -10,8 +10,8 @@ dependencies:
     sdk: flutter
   fl_recorder:
     path: ../
-  fl_extended: ^1.7.2
-  flutter_sound: ^9.25.9
+  fl_extended: ^1.7.3
+  flutter_sound: ^9.28.0
 
 dev_dependencies:
   flutter_lints: ^5.0.0

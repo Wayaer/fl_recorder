@@ -1,3 +1,7 @@
+## 0.2.0
+
+* Do not calculate recording duration in native
+
 ## 0.1.3
 
 * Fix call `cancel` error

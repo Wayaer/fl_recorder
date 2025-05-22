@@ -6,24 +6,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class AudioDescribe {
-  /// 录音时间
-  final int milliseconds;
-
-  /// data 长度
-  final int length;
-
   /// 原始数据
   final List<int> byte;
 
-  AudioDescribe.fromMap(Map map)
-      : milliseconds = map['timeMillis'] as int,
-        length = map['length'] as int,
-        byte = map['byte'] as List<int>;
+  AudioDescribe.fromMap(Map map) : byte = map['byte'] as List<int>;
 
   /// 计算 db
   double get decibels {
     double sum = 0.0;
-    for (int i = 0; i < length; i += 2) {
+    for (int i = 0; i < byte.length; i += 2) {
       // 将每两个字节转换为 16-bit PCM 格式的 short 值
       int sample = (byte[i + 1] << 8) | (byte[i] & 0xFF);
 
@@ -33,11 +24,10 @@ class AudioDescribe {
     }
 
     // 计算均方根值 (RMS)
-    double rms = math.sqrt(sum / (length / 2.0)); // 每个样本是 2 个字节
+    double rms = math.sqrt(sum / (byte.length / 2.0)); // 每个样本是 2 个字节
     if (rms == 0.0) return 0.0;
     // 转换为分贝 (dB)
-    double dB =
-        20 * math.log(rms / 32767.0) * math.log10e; // 32767 为 16 位音频的最大值
+    double dB = 20 * math.log(rms / 32767.0) * math.log10e; // 32767 为 16 位音频的最大值
     if (dB.isNaN) return 0;
     return dB.abs();
   }
@@ -88,22 +78,41 @@ class FlRecorder {
 
   FlEventChannel? _flEventChannel;
 
+  /// 录音时间
+  Duration _duration = Duration.zero;
+
+  Duration get duration => _duration;
+  Timer? _timer;
+
+  /// 开始录音计时
+  void _startTimer() {
+    _stopTimer();
+    final interval = const Duration(milliseconds: 200);
+    _timer = Timer.periodic(interval, (timer) {
+      _duration += interval;
+    });
+  }
+
+  /// 停止录音计时
+  void _stopTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
   /// 初始化 前台任务 和录音工具
-  Future<bool> initialize(
-      {FlAudioSource source = FlAudioSource.capture}) async {
+  Future<bool> initialize({FlAudioSource source = FlAudioSource.capture}) async {
     if (!_supportPlatform) return false;
     _flEventChannel = await FlChannel().create(_eventName);
     _flEventChannel?.listen(_onData, onError: _onError, onDone: _onDone);
-    final result = await _channel.invokeMethod<bool>(
-        'initialize', {'source': _isIOS ? 0 : source.index});
+    final result = await _channel.invokeMethod<bool>('initialize', {'source': _isIOS ? 0 : source.index});
+    _duration = Duration.zero;
     return _flEventChannel != null && (result ?? false);
   }
 
   /// 请求忽略电池优化
   Future<bool> requestIgnoreBatteryOptimizations() async {
     if (!_isAndroid) return false;
-    final result =
-        await _channel.invokeMethod<bool>('requestIgnoreBatteryOptimizations');
+    final result = await _channel.invokeMethod<bool>('requestIgnoreBatteryOptimizations');
     return result ?? false;
   }
 
@@ -111,6 +120,7 @@ class FlRecorder {
   Future<bool> startRecording() async {
     if (!_supportPlatform) return false;
     final result = await _channel.invokeMethod<bool>('startRecording');
+    if (result == true) _startTimer();
     return result ?? false;
   }
 
@@ -118,6 +128,7 @@ class FlRecorder {
   Future<bool> stopRecording() async {
     if (!_supportPlatform) return false;
     final result = await _channel.invokeMethod<bool>('stopRecording');
+    if (result == true) _stopTimer();
     return result ?? false;
   }
 
@@ -125,6 +136,10 @@ class FlRecorder {
   Future<bool> dispose({bool disposeEvent = true}) async {
     if (!_supportPlatform) return false;
     final result = await _channel.invokeMethod<bool>('dispose');
+    if (result == true) {
+      _stopTimer();
+      _duration = Duration.zero;
+    }
     if (disposeEvent) {
       Future.delayed(const Duration(seconds: 1), () {
         _flEventChannel?.dispose();
@@ -166,7 +181,6 @@ class FlRecorder {
 
 bool get _supportPlatform => _isAndroid || _isIOS;
 
-bool get _isAndroid =>
-    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+bool get _isAndroid => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
 bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;

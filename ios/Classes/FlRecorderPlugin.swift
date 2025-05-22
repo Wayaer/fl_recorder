@@ -46,8 +46,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
 
     // 音频来源
     var audioSource: Int?
-    // 添加时长记录相关的变量
-    var startTime: TimeInterval?
+    
     var accumulatedTime: TimeInterval = 0.0
 
     var isRecording: Bool = false
@@ -91,9 +90,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
             UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier!)
             backgroundTaskIdentifier = nil
         }
-
-        /// 记录累计时间
-        accumulatedTime = Date().timeIntervalSince1970 - startTime!
+        
         /// 录音结束录制
         timer?.invalidate()
         timer = nil
@@ -105,8 +102,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     func destroy() {
         stopRecording()
         accumulatedTime = 0.0
-        audioSource = nil
-        startTime = nil
+        audioSource = nil 
         isRecording = false
         accumulatedTime = 0
         flEventChannel = nil
@@ -115,7 +111,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     /// ------------------------- AudioRecorder ------------------------ ///
     var audioRecorder: AVAudioRecorder?
     var timer: Timer?
-    var segmentDuration: TimeInterval = 0.3 // 数据片段的时间间隔（秒）
+    var segmentDuration: TimeInterval = 0.2 // 数据片段的时间间隔（秒）
     var lastReadOffset: Int = 0 // 上次读取的偏移量
     var recordingUrl: URL?
     let audioSession = AVAudioSession.sharedInstance()
@@ -153,9 +149,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
                     self.audioRecorder = try AVAudioRecorder(url: fileURL, settings: settings)
                     self.audioRecorder?.delegate = self
                     // 启动定时器
-                    self.timer = Timer.scheduledTimer(timeInterval: self.segmentDuration, target: self, selector: #selector(self.readAudioSegment), userInfo: nil, repeats: true)
-                    // 开始计时
-                    self.startTime = Date().timeIntervalSince1970
+                    self.timer = Timer.scheduledTimer(timeInterval: self.segmentDuration, target: self, selector: #selector(self.readAudioSegment), userInfo: nil, repeats: true) 
                     self.audioRecorder?.record()
                     result(true)
                     return
@@ -174,17 +168,13 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         guard let url = recordingUrl, let fileHandle = try? FileHandle(forReadingFrom: url) else {
             return
         }
-
+        
         let fileSize = fileHandle.seekToEndOfFile()
         fileHandle.seek(toFileOffset: UInt64(lastReadOffset))
         let newData = fileHandle.readData(ofLength: Int(fileSize) - lastReadOffset)
-        var time = Date().timeIntervalSince1970 - startTime!
-        time += accumulatedTime
         if !newData.isEmpty {
             _ = flEventChannel?.send([
-                "byte": newData,
-                "timeMillis": Int(time * 1000),
-                "length": newData.count
+                "byte": newData
             ])
             lastReadOffset = Int(fileSize)
         }

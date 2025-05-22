@@ -5,10 +5,10 @@ PODS:
     - fl_channel
     - Flutter
   - Flutter (1.0.0)
-  - flutter_sound (9.23.1):
+  - flutter_sound (9.28.0):
     - Flutter
-    - flutter_sound_core (= 9.23.1)
-  - flutter_sound_core (9.23.1)
+    - flutter_sound_core (= 9.28.0)
+  - flutter_sound_core (9.28.0)
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -40,8 +40,8 @@ SPEC CHECKSUMS:
   fl_channel: d2c680e912d497be8eddea6b545ffc75dd251f8e
   fl_recorder: 71f6385f3958a11baf441c3ed175498c883dd4ed
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  flutter_sound: 9e4f2c89d07c223eb42bf78ea1cd6226034a4911
-  flutter_sound_core: 8d3c08efc430a06debc49a627f9b651b542e8351
+  flutter_sound: b9236a5875299aaa4cef1690afd2f01d52a3f890
+  flutter_sound_core: 427465f72d07ab8c3edbe8ffdde709ddacd3763c
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
 
 PODFILE CHECKSUM: 5a35c580073c859afffb38a6a140f34612def22c
