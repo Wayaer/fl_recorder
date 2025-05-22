@@ -3,25 +3,17 @@ package fl.recorder
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Context.MEDIA_PROJECTION_SERVICE
-import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.media.projection.MediaProjectionManager
-import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.provider.Settings
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -31,6 +23,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.PluginRegistry
+import androidx.core.net.toUri
 
 
 /** FlRecorderPlugin */
@@ -115,7 +108,7 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
                     }
                     activityBinding.activity.unbindService(serviceConnection)
                     result.success(true)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     result.success(false)
                 }
             }
@@ -162,7 +155,7 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
     private fun requestIgnoreBatteryOptimizations() {
         try {
             val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-            intent.setData(Uri.parse("package:" + context.packageName))
+            intent.setData(("package:" + context.packageName).toUri())
             activityBinding.activity.startActivityForResult(
                 intent, isIgnoringBatteryOptimizationsCode
             )
@@ -177,10 +170,12 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
             result?.success(true)
             result = null
             if (source == 0) {
-                val binder = service as MicrophoneAudioRecordService.MicrophoneAudioRecordServiceBinder
+                val binder =
+                    service as MicrophoneAudioRecordService.MicrophoneAudioRecordServiceBinder
                 microphoneAudioRecordService = binder.getService()
             } else if (source == 1) {
-                val binder = service as MediaProjectionAudioRecordService.MediaProjectionAudioRecordServiceBinder
+                val binder =
+                    service as MediaProjectionAudioRecordService.MediaProjectionAudioRecordServiceBinder
                 mediaProjectionAudioRecordService = binder.getService()
             }
 
@@ -227,7 +222,8 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
             if (requestCode == microphonePermissionRequestCode) {
                 startForegroundService(MicrophoneAudioRecordService.getIntent(context))
             } else if (requestCode == mediaProjectionPermissionRequestCode) {
-                val mProjectionManager = context.getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+                val mProjectionManager =
+                    context.getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
                 val screenCaptureIntent = mProjectionManager.createScreenCaptureIntent()
                 activityBinding.activity.startActivityForResult(
                     screenCaptureIntent, screenCaptureIRequestCode

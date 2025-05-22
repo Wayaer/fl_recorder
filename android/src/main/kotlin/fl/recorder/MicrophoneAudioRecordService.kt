@@ -1,6 +1,5 @@
 package fl.recorder
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Binder
@@ -14,7 +13,6 @@ class MicrophoneAudioRecordService : NotificationService() {
             return this@MicrophoneAudioRecordService
         }
     }
-
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         mRecorder = AudioRecorder(this)
