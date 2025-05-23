@@ -58,6 +58,27 @@ enum FlAudioSource {
   capture
 }
 
+/// ios 音频会话
+enum AVAudioSessionCategory {
+  /// 播放音频
+  ambient,
+
+  /// 播放音频 不允许打断
+  soloAmbient,
+
+  /// 播放音频
+  playback,
+
+  /// 录音
+  record,
+
+  /// 同时播放和录音
+  playAndRecord,
+
+  /// 同时播放和录音 不允许打断
+  multiRoute,
+}
+
 typedef FlRecorderCallback = void Function(AudioDescribe audio);
 
 typedef FlRecorderStateCallback = void Function(bool isRecording);
@@ -132,6 +153,20 @@ class FlRecorder {
   Future<bool> stopRecording() async {
     if (!_supportPlatform) return false;
     final result = await _channel.invokeMethod<bool>('stopRecording');
+    if (result == true) _stopTimer();
+    return result ?? false;
+  }
+
+  /// 设置 ios 音频会话
+  Future<bool> setAudioSession({
+    required AVAudioSessionCategory category,
+    required bool active,
+  }) async {
+    if (!_isIOS) return false;
+    final result = await _channel.invokeMethod<bool>('setAudioSession', {
+      'category': category.index,
+      'active': active,
+    });
     if (result == true) _stopTimer();
     return result ?? false;
   }

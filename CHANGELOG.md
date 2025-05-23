@@ -1,3 +1,7 @@
+## 0.2.1
+
+* Add audio session settings on iOS
+
 ## 0.2.0
 
 * Do not calculate recording duration in native

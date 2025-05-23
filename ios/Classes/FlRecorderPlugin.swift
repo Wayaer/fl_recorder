@@ -3,6 +3,7 @@ import CoreLocation
 import fl_channel
 import Flutter
 import ReplayKit
+
 public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate, RPScreenRecorderDelegate {
     var channel: FlutterMethodChannel
     var flEventChannel: FlEventChannel?
@@ -32,6 +33,29 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         case "stopRecording":
             stopRecording()
             result(true)
+        case "setAudioSession":
+            let args = call.arguments as! [String: Any]
+            let categoryIndex = args["category"] as! Int
+            let active = args["active"] as! Bool
+            var category: AVAudioSession.Category = .playback
+            switch categoryIndex {
+            case 0:
+                category = .ambient
+            case 1:
+                category = .soloAmbient
+            case 2:
+                category = .playback
+            case 3:
+                category = .record
+            case 4:
+                category = .playAndRecord
+            case 5:
+                category = .multiRoute
+            default:
+                category = .playback
+            }
+            _ = setAudioSession(category, active)
+            result(true)
         case "dispose":
             destroy()
             result(true)
@@ -46,7 +70,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
 
     // 音频来源
     var audioSource: Int?
-    
+
     var accumulatedTime: TimeInterval = 0.0
 
     var isRecording: Bool = false
@@ -67,18 +91,22 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
 
     var backgroundTaskIdentifier: UIBackgroundTaskIdentifier?
 
+    func setAudioSession(_ category: AVAudioSession.Category, _ active: Bool) -> Bool {
+        do {
+            try audioSession.setCategory(category, mode: .default, options: .mixWithOthers)
+            try audioSession.setActive(active, options: active ? .notifyOthersOnDeactivation : [])
+            return true
+        } catch {
+            print("FlRecorder setAudioSession: \(error)")
+        }
+        return false
+    }
+
     func stopRecording() {
         if audioSource == 0 {
             audioRecorder?.stop()
             audioRecorder?.deleteRecording()
-
-            // 结束音频会话
-            do {
-                try audioSession.setCategory(.playback, mode: .default, options: .mixWithOthers)
-                try audioSession.setActive(false)
-            } catch {
-                print("Failed to deactivate audio session: \(error)")
-            }
+            _ = setAudioSession(.playback, false)
         } else if audioSource == 1 {
             /// 录屏结束录制
             if screenRecorder.isRecording {
@@ -90,7 +118,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
             UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier!)
             backgroundTaskIdentifier = nil
         }
-        
+
         /// 录音结束录制
         timer?.invalidate()
         timer = nil
@@ -102,7 +130,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     func destroy() {
         stopRecording()
         accumulatedTime = 0.0
-        audioSource = nil 
+        audioSource = nil
         isRecording = false
         accumulatedTime = 0
         flEventChannel = nil
@@ -119,16 +147,13 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     func startAudioRecording(_ result: @escaping FlutterResult) {
         audioSession.requestRecordPermission { granted in
             if granted {
-                do {
-                    try self.audioSession.setCategory(.record, mode: .default)
-                    try self.audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                var state = self.setAudioSession(.record, true)
+                if state {
                     self.backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(withName: "BackgroundAudio") {
                         // 后台任务结束时的清理工作
                         print("Background task ended.")
                     }
-                    // print("Audio session configured for recording.")
-                } catch {
-                    // print("Error configuring audio session: \(error)")
+                } else {
                     result(false)
                     return
                 }
@@ -149,7 +174,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
                     self.audioRecorder = try AVAudioRecorder(url: fileURL, settings: settings)
                     self.audioRecorder?.delegate = self
                     // 启动定时器
-                    self.timer = Timer.scheduledTimer(timeInterval: self.segmentDuration, target: self, selector: #selector(self.readAudioSegment), userInfo: nil, repeats: true) 
+                    self.timer = Timer.scheduledTimer(timeInterval: self.segmentDuration, target: self, selector: #selector(self.readAudioSegment), userInfo: nil, repeats: true)
                     self.audioRecorder?.record()
                     result(true)
                     return
@@ -168,7 +193,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         guard let url = recordingUrl, let fileHandle = try? FileHandle(forReadingFrom: url) else {
             return
         }
-        
+
         let fileSize = fileHandle.seekToEndOfFile()
         fileHandle.seek(toFileOffset: UInt64(lastReadOffset))
         let newData = fileHandle.readData(ofLength: Int(fileSize) - lastReadOffset)
