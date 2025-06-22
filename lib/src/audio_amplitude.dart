@@ -64,18 +64,24 @@ extension ExtensionAudioDescribeToAmplitudes on AudioDescribe {
 }
 
 class FlAudioAmplitudeWave extends StatelessWidget {
-  const FlAudioAmplitudeWave({super.key, required this.data, this.color = Colors.red, this.height = 200});
+  const FlAudioAmplitudeWave(
+      {super.key,
+      required this.data,
+      this.color = Colors.red,
+      this.minHeight = 2,
+      this.maxHeight = 200});
 
   final List<double> data;
 
   final Color color;
 
-  final double height;
+  final double maxHeight;
+  final double minHeight;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: height,
+      height: maxHeight,
       child: ListView.builder(
         itemCount: data.length,
         scrollDirection: Axis.horizontal,
@@ -83,12 +89,16 @@ class FlAudioAmplitudeWave extends StatelessWidget {
         reverse: true,
         itemBuilder: (_, int index) {
           final item = data[index];
+          double height = item;
+          if (height < minHeight) height = minHeight;
+          if (item > maxHeight) height = maxHeight;
           return Container(
               width: 2,
               margin: EdgeInsets.symmetric(horizontal: 1),
               height: double.infinity,
               alignment: Alignment.center,
-              child: Container(width: double.infinity, height: item, color: color));
+              child: Container(
+                  width: double.infinity, height: height, color: color));
         },
       ),
     );
