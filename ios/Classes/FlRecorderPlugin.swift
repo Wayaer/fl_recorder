@@ -71,8 +71,6 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     // 音频来源
     var audioSource: Int?
 
-    var accumulatedTime: TimeInterval = 0.0
-
     var isRecording: Bool = false
 
     func startRecording(_ result: @escaping FlutterResult) {
@@ -129,17 +127,15 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
 
     func destroy() {
         stopRecording()
-        accumulatedTime = 0.0
         audioSource = nil
         isRecording = false
-        accumulatedTime = 0
         flEventChannel = nil
     }
 
     /// ------------------------- AudioRecorder ------------------------ ///
     var audioRecorder: AVAudioRecorder?
     var timer: Timer?
-    var segmentDuration: TimeInterval = 0.2 // 数据片段的时间间隔（秒）
+    var segmentDuration: TimeInterval = 0.05 // 数据片段的时间间隔（秒）
     var lastReadOffset: Int = 0 // 上次读取的偏移量
     var recordingUrl: URL?
     let audioSession = AVAudioSession.sharedInstance()
@@ -260,12 +256,10 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     }
 
     public func screenRecorder(_ screenRecorder: RPScreenRecorder, didStopRecordingWith previewViewController: RPPreviewViewController?, error: (any Error)?) {
-        // print("=======screenRecorder  didStopRecordingWith")
         _ = flEventChannel?.send(false)
     }
 
     public func screenRecorder(_ screenRecorder: RPScreenRecorder, didStopRecordingWithError error: any Error, previewViewController: RPPreviewViewController?) {
-        // print("=======screenRecorder  didStopRecordingWithError")
         _ = flEventChannel?.send(false)
         stopRecording()
     }

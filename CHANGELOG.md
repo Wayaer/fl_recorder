@@ -1,3 +1,7 @@
+## 0.2.2
+
+* Reduce callback time to 0.05 seconds on iOS
+
 ## 0.2.1
 
 * Add audio session settings on iOS
