@@ -135,7 +135,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     /// ------------------------- AudioRecorder ------------------------ ///
     var audioRecorder: AVAudioRecorder?
     var timer: Timer?
-    var segmentDuration: TimeInterval = 0.05 // 数据片段的时间间隔（秒）
+    var segmentDuration: TimeInterval = 0.2 // 数据片段的时间间隔（秒）
     var lastReadOffset: Int = 0 // 上次读取的偏移量
     var recordingUrl: URL?
     let audioSession = AVAudioSession.sharedInstance()
@@ -143,7 +143,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     func startAudioRecording(_ result: @escaping FlutterResult) {
         audioSession.requestRecordPermission { granted in
             if granted {
-                var state = self.setAudioSession(.record, true)
+                let state = self.setAudioSession(.record, true)
                 if state {
                     self.backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(withName: "BackgroundAudio") {
                         // 后台任务结束时的清理工作
@@ -187,18 +187,20 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
 
     @objc func readAudioSegment() {
         guard let url = recordingUrl, let fileHandle = try? FileHandle(forReadingFrom: url) else {
+            print("FlRecorder Error opening file for reading.")
             return
         }
 
         let fileSize = fileHandle.seekToEndOfFile()
         fileHandle.seek(toFileOffset: UInt64(lastReadOffset))
         let newData = fileHandle.readData(ofLength: Int(fileSize) - lastReadOffset)
-        if !newData.isEmpty {
-            _ = flEventChannel?.send([
-                "byte": newData
-            ])
-            lastReadOffset = Int(fileSize)
-        }
+        print("newData: \(newData.count)")
+//        if !newData.isEmpty {
+        _ = flEventChannel?.send([
+            "byte": newData
+        ])
+        lastReadOffset = Int(fileSize)
+//        }
         fileHandle.closeFile()
     }
 
@@ -229,7 +231,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
             screenRecorder.isMicrophoneEnabled = false
 
             screenRecorder.startCapture(handler: { [self] _, _, error in
-                if let error = error {
+                if error != nil {
                     isRecording = false
                     _ = flEventChannel?.send(false)
                 } else {

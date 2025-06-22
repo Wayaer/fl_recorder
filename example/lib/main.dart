@@ -49,13 +49,12 @@ class _HomePageState extends State<HomePage> {
     addPostFrameCallback((_) {
       recording.onChanged((AudioDescribe audio) {
         byte.addAll(audio.byte);
-        amplitude.addAll(audio.toAmplitude);
+        amplitude.addAll(audio.scaledAmplitude(scaleFactor: 3));
         text = ("isRecording:${recording.isRecording}\n"
             "byte:${byte.length}\n"
             "length:${audio.byte.length}\n"
             "duration:${recording.duration}\n"
             "amplitude:${amplitude.length}");
-        debugPrint('$text\n');
         if (mounted) setState(() {});
       });
       recording.onStateChanged((bool isRecording) {
@@ -66,7 +65,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
+    return Universal(isScroll: true, children: [
+      FlAudioAmplitudeWave(data: amplitude),
+      12.heightBox,
       Card(
           child: Container(
               height: 140,
@@ -79,24 +80,21 @@ class _HomePageState extends State<HomePage> {
           ElevatedText(
               text: 'requestIgnoreBatteryOptimizations',
               onPressed: () async {
-                final result =
-                    await recording.requestIgnoreBatteryOptimizations();
+                final result = await recording.requestIgnoreBatteryOptimizations();
                 text = "requestIgnoreBatteryOptimizations : $result";
                 setState(() {});
               }),
         ElevatedText(
             text: 'initialize(FlAudioSource.capture)',
             onPressed: () async {
-              final result =
-                  await recording.initialize(source: FlAudioSource.capture);
+              final result = await recording.initialize(source: FlAudioSource.capture);
               text = "initialize(FlAudioSource.capture) : $result";
               setState(() {});
             }),
         ElevatedText(
             text: 'initialize(FlAudioSource.microphone)',
             onPressed: () async {
-              final result =
-                  await recording.initialize(source: FlAudioSource.microphone);
+              final result = await recording.initialize(source: FlAudioSource.microphone);
               text = "initialize(FlAudioSource.microphone) : $result";
               setState(() {});
             }),
@@ -157,6 +155,5 @@ class ElevatedText extends StatelessWidget {
   final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) =>
-      ElevatedButton(onPressed: onPressed, child: Text(text));
+  Widget build(BuildContext context) => ElevatedButton(onPressed: onPressed, child: Text(text));
 }
