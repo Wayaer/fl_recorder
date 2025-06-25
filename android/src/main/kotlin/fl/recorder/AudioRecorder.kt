@@ -14,6 +14,8 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import fl.channel.FlChannelPlugin
 import fl.channel.FlEventChannel
+import kotlin.math.abs
+import kotlin.math.log10
 
 class AudioRecorder(private val context: Context) {
     private var isRecording: Boolean = false
@@ -119,18 +121,32 @@ class AudioRecorder(private val context: Context) {
         flEventChannel = null
     }
 
+
     private fun writeAudioFile() {
         try {
             val byte = ByteArray(bufferSize)
             while (isRecording) {
-                mRecorder!!.read(byte, 0, bufferSize)
+                val readSize = mRecorder!!.read(byte, 0, bufferSize)
                 flEventChannel?.send(
-                    mapOf("byte" to byte)
+                    mapOf("byte" to byte, "decibel" to getNormalizedDecibel(readSize, byte))
                 )
             }
         } catch (e: Exception) {
             Log.e(TAG, "Exception: $e")
             e.printStackTrace()
         }
+    }
+
+    private fun getNormalizedDecibel(readSize: Int, byte: ByteArray): Double {
+        val referenceAmp = 32768.0 // 16位音频的最大值
+        val maxDecibels = 100.0
+        var maxAmplitude = 0
+        for (i in 0 until readSize step 2) {
+            val sample = (byte[i + 1].toInt() shl 8) or (byte[i].toInt() and 0xff)
+            maxAmplitude = maxOf(maxAmplitude, abs(sample))
+        }
+        if (maxAmplitude == 0) return 0.0
+        val dB = 20 * log10(maxAmplitude / referenceAmp)
+        return maxOf(0.0, minOf(1.0, dB / maxDecibels + 1))
     }
 }

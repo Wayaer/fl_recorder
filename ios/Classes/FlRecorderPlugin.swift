@@ -135,7 +135,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
     /// ------------------------- AudioRecorder ------------------------ ///
     var audioRecorder: AVAudioRecorder?
     var timer: Timer?
-    var segmentDuration: TimeInterval = 0.2 // 数据片段的时间间隔（秒）
+    var segmentDuration: TimeInterval = 0.1 // 数据片段的时间间隔（秒）
     var lastReadOffset: Int = 0 // 上次读取的偏移量
     var recordingUrl: URL?
     let audioSession = AVAudioSession.sharedInstance()
@@ -171,6 +171,8 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
                     self.audioRecorder?.delegate = self
                     // 启动定时器
                     self.timer = Timer.scheduledTimer(timeInterval: self.segmentDuration, target: self, selector: #selector(self.readAudioSegment), userInfo: nil, repeats: true)
+                    self.audioRecorder?.isMeteringEnabled = true // 启用音频计量
+                    self.audioRecorder?.prepareToRecord()
                     self.audioRecorder?.record()
                     result(true)
                     return
@@ -194,14 +196,27 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         let fileSize = fileHandle.seekToEndOfFile()
         fileHandle.seek(toFileOffset: UInt64(lastReadOffset))
         let newData = fileHandle.readData(ofLength: Int(fileSize) - lastReadOffset)
-        print("newData: \(newData.count)")
-//        if !newData.isEmpty {
         _ = flEventChannel?.send([
-            "byte": newData
+            "byte": newData,
+            "decibel": getNormalizedDecibel()
         ])
         lastReadOffset = Int(fileSize)
-//        }
         fileHandle.closeFile()
+    }
+
+    // 获取当前音频的平均分贝值（归一化为 0.0-1.0 范围）
+    func getNormalizedDecibel() -> Float {
+        guard let recorder = audioRecorder, isRecording else { return 0.0 }
+
+        // 获取平均功率 (-100.0 到 0.0)
+        recorder.updateMeters()
+        var averagePower = recorder.averagePower(forChannel: 0)
+        if averagePower < -100.0 { // 忽略极低的噪声
+            averagePower = 0.0
+        } else if averagePower > 0 {
+            averagePower = 1
+        }
+        return (averagePower + 100.0) / 100.0 // 将 -100dB 到 0dB 映射到 0.0 到 1.0
     }
 
     public func audioRecorderBeginInterruption(_ recorder: AVAudioRecorder) {
