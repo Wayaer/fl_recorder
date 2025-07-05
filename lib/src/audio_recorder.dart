@@ -85,11 +85,13 @@ class FlRecorder {
   }
 
   /// 初始化 前台任务 和录音工具
-  Future<bool> initialize({FlAudioSource source = FlAudioSource.capture}) async {
+  Future<bool> initialize(
+      {FlAudioSource source = FlAudioSource.capture}) async {
     if (!_supportPlatform) return false;
     _flEventChannel = await FlChannel().create(_eventName);
     _flEventChannel?.listen(_onData, onError: _onError, onDone: _onDone);
-    final result = await _channel.invokeMethod<bool>('initialize', {'source': _isIOS ? 0 : source.index});
+    final result = await _channel.invokeMethod<bool>(
+        'initialize', {'source': _isIOS ? 0 : source.index});
     _duration = Duration.zero;
     return _flEventChannel != null && (result ?? false);
   }
@@ -97,7 +99,8 @@ class FlRecorder {
   /// 请求忽略电池优化
   Future<bool> requestIgnoreBatteryOptimizations() async {
     if (!_isAndroid) return false;
-    final result = await _channel.invokeMethod<bool>('requestIgnoreBatteryOptimizations');
+    final result =
+        await _channel.invokeMethod<bool>('requestIgnoreBatteryOptimizations');
     return result ?? false;
   }
 
@@ -180,6 +183,7 @@ class FlRecorder {
 
 bool get _supportPlatform => _isAndroid || _isIOS;
 
-bool get _isAndroid => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+bool get _isAndroid =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
 bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;

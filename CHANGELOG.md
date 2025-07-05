@@ -1,3 +1,8 @@
+## 0.3.0
+
+* AudioDescribe has added a decibel attribute, which is passed through native transmission
+* Added `FlAudioDecibelsWave` for rendering decibel
+
 ## 0.2.2
 
 * Reduce callback time to 0.05 seconds on iOS
