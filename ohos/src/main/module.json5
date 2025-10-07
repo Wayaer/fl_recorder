@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "fl_recorder",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}

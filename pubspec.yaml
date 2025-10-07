@@ -23,3 +23,5 @@ flutter:
         pluginClass: FlRecorderPlugin
       ios:
         pluginClass: FlRecorderPlugin
+      ohos:
+        pluginClass: FlRecorderPlugin
