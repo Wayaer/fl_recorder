@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.AudioRecord
 import android.media.MediaRecorder
 
+
 class MicrophoneAudioRecorder(context: Context) : AudioRecorder(context) {
 
     override fun initialize(): Boolean {

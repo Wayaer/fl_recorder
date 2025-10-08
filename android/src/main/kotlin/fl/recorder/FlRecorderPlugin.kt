@@ -50,9 +50,11 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
 
     // 麦克风
     private var microphoneAudioRecordService: MicrophoneAudioRecordService? = null
+    private var microphoneAudioServiceConnection: ServiceConnection? = null
 
     // 系统录音
     private var mediaProjectionAudioRecordService: MediaProjectionAudioRecordService? = null
+    private var mediaProjectionAudioServiceConnection: ServiceConnection? = null
 
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -95,12 +97,19 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
                     val source = call.argument<Int>("source")
                     if (source == 0) {
                         context.stopService(MicrophoneAudioRecordService.getIntent(context))
+                        microphoneAudioServiceConnection?.let {
+                            activityBinding.activity.unbindService(it)
+                        }
                         microphoneAudioRecordService = null
+                        microphoneAudioServiceConnection = null
                     } else if (source == 1) {
                         context.stopService(MediaProjectionAudioRecordService.getIntent(context))
+                        mediaProjectionAudioServiceConnection?.let {
+                            activityBinding.activity.unbindService(it)
+                        }
                         mediaProjectionAudioRecordService = null
+                        mediaProjectionAudioServiceConnection = null
                     }
-                    source?.let { activityBinding.activity.unbindService(FlServiceConnection(it)) }
                     result.success(source != null)
                 } catch (_: Exception) {
                     result.success(false)
@@ -177,21 +186,20 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
             if (requestCode == screenCaptureRequestCode) {
                 val intent = MediaProjectionAudioRecordService.getIntent(context)
                 intent.putExtra("resultData", data)
-                startForegroundService(intent, 1)
+                mediaProjectionAudioServiceConnection = FlServiceConnection(1)
+                startForegroundService(intent, 1, mediaProjectionAudioServiceConnection!!)
             }
         }
         if (requestCode == isIgnoringBatteryOptimizationsCode) {
-            result?.success(isIgnoringBatteryOptimizations())
-            result = null
+            resultSuccess(isIgnoringBatteryOptimizations())
         }
         return false
     }
 
-    private fun startForegroundService(intent: Intent, source: Int) {
-        intent.putExtra("source", source)
+    private fun startForegroundService(intent: Intent, source: Int, conn: ServiceConnection) {
         ContextCompat.startForegroundService(context, intent)
         activityBinding.activity.bindService(
-            intent, FlServiceConnection(source), Context.BIND_AUTO_CREATE
+            intent, conn, Context.BIND_AUTO_CREATE
         )
     }
 
@@ -201,7 +209,12 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
     ): Boolean {
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             if (requestCode == microphonePermissionRequestCode) {
-                startForegroundService(MicrophoneAudioRecordService.getIntent(context), 0)
+                microphoneAudioServiceConnection = FlServiceConnection(0)
+                startForegroundService(
+                    MicrophoneAudioRecordService.getIntent(context),
+                    0,
+                    microphoneAudioServiceConnection!!
+                )
             } else if (requestCode == mediaProjectionPermissionRequestCode) {
                 val mProjectionManager =
                     context.getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
@@ -238,8 +251,7 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
         private val source: Int
     ) : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            result?.success(true)
-            result = null
+            resultSuccess(true)
             if (source == 0) {
                 val binder =
                     service as MicrophoneAudioRecordService.MicrophoneAudioRecordServiceBinder
@@ -259,5 +271,10 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
                 mediaProjectionAudioRecordService = null
             }
         }
+    }
+
+    fun resultSuccess(any: Any?) {
+        result?.success(any)
+        result = null
     }
 }

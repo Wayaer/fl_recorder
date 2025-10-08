@@ -20,16 +20,16 @@ class MediaProjectionAudioRecorder(context: Context) : AudioRecorder(context) {
                     .addMatchingUsage(AudioAttributes.USAGE_GAME)
 
                     // 通信类（电话相关）
-                    .addMatchingUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                    .addMatchingUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION_SIGNALLING)
+//                    .addMatchingUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+//                    .addMatchingUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION_SIGNALLING)
 //                    .addMatchingUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION_MEDIA)
 
                     // 通知类
                     .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION)
                     .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                    // .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_REQUEST)
-                    //.addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_INSTANT)
-                    //.addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_DELAYED)
+                    .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_REQUEST)
+                    .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_INSTANT)
+                    .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_DELAYED)
                     .addMatchingUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
 
                     // 辅助功能类

@@ -1,3 +1,4 @@
+import 'package:example/src/recorder_merge_page.dart';
 import 'package:example/src/recorder_page.dart';
 import 'package:fl_extended/fl_extended.dart';
 import 'package:fl_recorder/fl_recorder.dart';
@@ -41,14 +42,19 @@ class HomePage extends StatelessWidget {
                 }),
           ElevatedText(
               onPressed: () {
-                FlRecorderPage(source: FlAudioSource.microphone).showModalPopup(context);
+                AudioSourceRecorderPage(source: FlAudioSource.microphone).showModalPopup(context);
               },
-              text: 'FlRecorder Microphone'),
+              text: 'FlRecorder microphone'),
           ElevatedText(
               onPressed: () {
-                FlRecorderPage(source: FlAudioSource.capture).showModalPopup(context);
+                AudioSourceRecorderPage(source: FlAudioSource.capture).showModalPopup(context);
               },
               text: 'FlRecorder capture'),
+          ElevatedText(
+              onPressed: () {
+                RecorderMergePage().showModalPopup(context);
+              },
+              text: '麦克风和音频采集'),
         ]));
   }
 }

@@ -6,16 +6,16 @@ import 'package:fl_recorder/fl_recorder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 
-class FlRecorderPage extends StatefulWidget {
-  const FlRecorderPage({super.key, required this.source});
+class AudioSourceRecorderPage extends StatefulWidget {
+  const AudioSourceRecorderPage({super.key, required this.source});
 
   final FlAudioSource source;
 
   @override
-  State<FlRecorderPage> createState() => _FlRecorderPageState();
+  State<AudioSourceRecorderPage> createState() => _AudioSourceRecorderPageState();
 }
 
-class _FlRecorderPageState extends State<FlRecorderPage> {
+class _AudioSourceRecorderPageState extends State<AudioSourceRecorderPage> {
   late FlAudioSourceRecorder recorder;
   List<int> byte = [];
   List<double> decibels = [];
