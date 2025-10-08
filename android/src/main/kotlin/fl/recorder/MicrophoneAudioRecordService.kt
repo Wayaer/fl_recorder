@@ -15,8 +15,8 @@ class MicrophoneAudioRecordService : NotificationService() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        mRecorder = AudioRecorder(this)
-        mRecorder!!.initializeMicrophoneAudioRecord()
+        mRecorder = MicrophoneAudioRecorder(this)
+        mRecorder!!.initialize()
         return super.onStartCommand(intent, flags, startId)
     }
 

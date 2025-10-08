@@ -18,7 +18,8 @@ class MediaProjectionAudioRecordService : NotificationService() {
 
     override fun onCreate() {
         super.onCreate()
-        mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        mediaProjectionManager =
+            getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
     }
 
     private val binder = MediaProjectionAudioRecordServiceBinder()
@@ -41,10 +42,11 @@ class MediaProjectionAudioRecordService : NotificationService() {
         }
         resultData?.let {
             mMediaProjectionCallback = MediaProjectionCallback()
-            mediaProjection = mediaProjectionManager.getMediaProjection(Activity.RESULT_OK, resultData)
+            mediaProjection =
+                mediaProjectionManager.getMediaProjection(Activity.RESULT_OK, resultData)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mediaProjection != null) {
-                mRecorder = AudioRecorder(this)
-                mRecorder!!.initializeMediaProjectionAudioRecord(mediaProjection)
+                mRecorder = MediaProjectionAudioRecorder(this)
+                mRecorder!!.initialize(mediaProjection!!)
             } else {
                 mediaProjection?.stop()
                 stopSelf()
