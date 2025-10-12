@@ -19,8 +19,6 @@ class MicrophoneAudioRecorder: FlAudioRecorder, AVAudioRecorderDelegate {
             result(false)
             return
         }
-        isRecording = true
-        _ = getEventChannel().send(true)
         startAudioRecording(result)
     }
 
@@ -69,6 +67,8 @@ class MicrophoneAudioRecorder: FlAudioRecorder, AVAudioRecorderDelegate {
                     self.audioRecorder?.isMeteringEnabled = true // 启用音频计量
                     self.audioRecorder?.prepareToRecord()
                     self.audioRecorder?.record()
+                    self.isRecording = true
+                    _ = self.getEventChannel().send(true)
                     result(true)
                     return
                 } catch {

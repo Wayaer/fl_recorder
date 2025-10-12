@@ -68,6 +68,7 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
                 result(microphoneAudioRecorder != nil)
             } else if source == 1 {
                 screenCaptureAudioRecorder?.stopRecording()
+
                 result(screenCaptureAudioRecorder != nil)
             } else {
                 result(false)
@@ -77,10 +78,12 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
             let source = args["source"] as? Int
             if source == 0 {
                 microphoneAudioRecorder?.dispose()
-                result(microphoneAudioRecorder != nil)
+                microphoneAudioRecorder = nil
+                result(microphoneAudioRecorder == nil)
             } else if source == 1 {
                 screenCaptureAudioRecorder?.dispose()
-                result(screenCaptureAudioRecorder != nil)
+                screenCaptureAudioRecorder = nil
+                result(screenCaptureAudioRecorder == nil)
             } else { result(false) }
         case "setAudioSession":
             let args = call.arguments as! [String: Any]
