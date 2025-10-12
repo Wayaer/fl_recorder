@@ -34,12 +34,9 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
     private lateinit var context: Context
     private lateinit var activityBinding: ActivityPluginBinding
 
-    private val screenCaptureRequestCode = 666
     private val isIgnoringBatteryOptimizationsCode = 888
-    private val microphonePermissionRequestCode = 1000
     private val mediaProjectionPermissionRequestCode = 10001
 
-    private var result: MethodChannel.Result? = null
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         context = flutterPluginBinding.applicationContext
@@ -47,27 +44,36 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
         channel.setMethodCallHandler(this)
     }
 
+    private var isIgnoringBatteryResult: MethodChannel.Result? = null
 
     // 麦克风
     private var microphoneAudioRecordService: MicrophoneAudioRecordService? = null
     private var microphoneAudioServiceConnection: ServiceConnection? = null
+    private var microphoneResult: MethodChannel.Result? = null
+    private val microphonePermissionRequestCode = 1000
 
     // 系统录音
-    private var mediaProjectionAudioRecordService: MediaProjectionAudioRecordService? = null
-    private var mediaProjectionAudioServiceConnection: ServiceConnection? = null
-
+    private var screenCaptureAudioRecordService: ScreenCaptureAudioRecordService? = null
+    private var screenCaptureAudioServiceConnection: ServiceConnection? = null
+    private var screenCaptureResult: MethodChannel.Result? = null
+    private val screenCaptureRequestCode = 666
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "initialize" -> {
-                this.result = result
                 val source = call.argument<Int>("source")
-                if (source == 0 && microphoneAudioRecordService != null) {
-                    result.success(true)
-                    return
-                } else if (source == 1 && mediaProjectionAudioRecordService != null) {
-                    result.success(true)
-                    return
+                if (source == 0) {
+                    if (microphoneAudioRecordService != null) {
+                        result.success(true)
+                        return
+                    }
+                    this.microphoneResult = result
+                } else if (source == 1) {
+                    if (screenCaptureAudioRecordService != null) {
+                        result.success(true)
+                        return
+                    }
+                    this.screenCaptureResult = result
                 }
                 initialize(result, source)
             }
@@ -76,7 +82,7 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
                 val source = call.argument<Int>("source")
                 val value = when (source) {
                     0 -> microphoneAudioRecordService?.startRecording()
-                    1 -> mediaProjectionAudioRecordService?.startRecording()
+                    1 -> screenCaptureAudioRecordService?.startRecording()
                     else -> null
                 }
                 result.success(value == true)
@@ -86,7 +92,7 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
                 val source = call.argument<Int>("source")
                 val value = when (source) {
                     0 -> microphoneAudioRecordService?.stopRecording()
-                    1 -> mediaProjectionAudioRecordService?.stopRecording()
+                    1 -> screenCaptureAudioRecordService?.stopRecording()
                     else -> null
                 }
                 result.success(value == true)
@@ -103,12 +109,12 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
                         microphoneAudioRecordService = null
                         microphoneAudioServiceConnection = null
                     } else if (source == 1) {
-                        context.stopService(MediaProjectionAudioRecordService.getIntent(context))
-                        mediaProjectionAudioServiceConnection?.let {
+                        context.stopService(ScreenCaptureAudioRecordService.getIntent(context))
+                        screenCaptureAudioServiceConnection?.let {
                             activityBinding.activity.unbindService(it)
                         }
-                        mediaProjectionAudioRecordService = null
-                        mediaProjectionAudioServiceConnection = null
+                        screenCaptureAudioRecordService = null
+                        screenCaptureAudioServiceConnection = null
                     }
                     result.success(source != null)
                 } catch (_: Exception) {
@@ -118,7 +124,7 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
 
             "requestIgnoreBatteryOptimizations" -> {
                 if (!isIgnoringBatteryOptimizations()) {
-                    this.result = result
+                    isIgnoringBatteryResult = result
                     requestIgnoreBatteryOptimizations()
                     return
                 }
@@ -184,14 +190,15 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == screenCaptureRequestCode) {
-                val intent = MediaProjectionAudioRecordService.getIntent(context)
+                val intent = ScreenCaptureAudioRecordService.getIntent(context)
                 intent.putExtra("resultData", data)
-                mediaProjectionAudioServiceConnection = FlServiceConnection(1)
-                startForegroundService(intent, 1, mediaProjectionAudioServiceConnection!!)
+                screenCaptureAudioServiceConnection = FlServiceConnection(1)
+                startForegroundService(intent, 1, screenCaptureAudioServiceConnection!!)
             }
         }
         if (requestCode == isIgnoringBatteryOptimizationsCode) {
-            resultSuccess(isIgnoringBatteryOptimizations())
+            isIgnoringBatteryResult?.success(isIgnoringBatteryOptimizations())
+            isIgnoringBatteryResult = null
         }
         return false
     }
@@ -251,30 +258,31 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
         private val source: Int
     ) : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            resultSuccess(true)
             if (source == 0) {
+                microphoneResult?.success(true)
+                microphoneResult = null
                 val binder =
                     service as MicrophoneAudioRecordService.MicrophoneAudioRecordServiceBinder
                 microphoneAudioRecordService = binder.getService()
             } else if (source == 1) {
+                screenCaptureResult?.success(true)
+                screenCaptureResult = null
                 val binder =
-                    service as MediaProjectionAudioRecordService.MediaProjectionAudioRecordServiceBinder
-                mediaProjectionAudioRecordService = binder.getService()
+                    service as ScreenCaptureAudioRecordService.ScreenCaptureAudioRecordServiceBinder
+                screenCaptureAudioRecordService = binder.getService()
             }
-
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             if (source == 0) {
+                microphoneAudioRecordService?.dispose()
                 microphoneAudioRecordService = null
             } else if (source == 1) {
-                mediaProjectionAudioRecordService = null
+                screenCaptureAudioRecordService?.dispose()
+                screenCaptureAudioRecordService = null
             }
         }
     }
 
-    fun resultSuccess(any: Any?) {
-        result?.success(any)
-        result = null
-    }
+
 }

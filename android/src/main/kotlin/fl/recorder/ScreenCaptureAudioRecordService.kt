@@ -10,7 +10,7 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 
-class MediaProjectionAudioRecordService : NotificationService() {
+class ScreenCaptureAudioRecordService : NotificationService() {
 
     private lateinit var mediaProjectionManager: MediaProjectionManager
     private var mMediaProjectionCallback: MediaProjectionCallback? = null
@@ -22,11 +22,11 @@ class MediaProjectionAudioRecordService : NotificationService() {
             getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
     }
 
-    private val binder = MediaProjectionAudioRecordServiceBinder()
+    private val binder = ScreenCaptureAudioRecordServiceBinder()
 
-    inner class MediaProjectionAudioRecordServiceBinder : Binder() {
-        fun getService(): MediaProjectionAudioRecordService {
-            return this@MediaProjectionAudioRecordService
+    inner class ScreenCaptureAudioRecordServiceBinder : Binder() {
+        fun getService(): ScreenCaptureAudioRecordService {
+            return this@ScreenCaptureAudioRecordService
         }
     }
 
@@ -45,7 +45,7 @@ class MediaProjectionAudioRecordService : NotificationService() {
             mediaProjection =
                 mediaProjectionManager.getMediaProjection(Activity.RESULT_OK, resultData)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mediaProjection != null) {
-                mRecorder = MediaProjectionAudioRecorder(this)
+                mRecorder = ScreenCaptureAudioRecorder(this)
                 mRecorder!!.initialize(mediaProjection!!)
             } else {
                 mediaProjection?.stop()
@@ -66,13 +66,13 @@ class MediaProjectionAudioRecordService : NotificationService() {
 
 
     override fun onDestroy() {
-        destroy()
+        dispose()
         super.onDestroy()
     }
 
     @SuppressLint("WrongConstant")
-    override fun destroy() {
-        super.destroy()
+    override fun dispose() {
+        super.dispose()
         mMediaProjectionCallback?.let { mediaProjection?.unregisterCallback(it) }
         mediaProjection?.stop()
         mediaProjection = null
@@ -81,13 +81,13 @@ class MediaProjectionAudioRecordService : NotificationService() {
 
     companion object {
         fun getIntent(context: Context): Intent {
-            return Intent(context, MediaProjectionAudioRecordService::class.java)
+            return Intent(context, ScreenCaptureAudioRecordService::class.java)
         }
     }
 
     inner class MediaProjectionCallback : MediaProjection.Callback() {
         override fun onStop() {
-            destroy()
+            dispose()
         }
     }
 }

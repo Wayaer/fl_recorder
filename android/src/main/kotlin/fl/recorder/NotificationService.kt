@@ -54,8 +54,8 @@ open class NotificationService : Service() {
     }
 
     @SuppressLint("WrongConstant")
-    open fun destroy() {
-        mRecorder?.destroy()
+    open fun dispose() {
+        mRecorder?.dispose()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             stopForeground(notificationId)
         }

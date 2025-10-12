@@ -8,7 +8,7 @@ import android.media.AudioRecord
 import android.media.projection.MediaProjection
 import android.os.Build
 
-class MediaProjectionAudioRecorder(context: Context) : AudioRecorder(context) {
+class ScreenCaptureAudioRecorder(context: Context) : AudioRecorder(context) {
 
     override fun initialize(mProjection: MediaProjection): Boolean {
         getEventChannel("capture")

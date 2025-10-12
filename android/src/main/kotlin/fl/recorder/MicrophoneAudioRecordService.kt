@@ -33,7 +33,7 @@ class MicrophoneAudioRecordService : NotificationService() {
     }
 
     override fun onDestroy() {
-        destroy()
+        dispose()
         super.onDestroy()
     }
 

@@ -45,7 +45,7 @@
             android:enabled="true"
             android:foregroundServiceType="microphone" />
         <service
-            android:name=".MediaProjectionAudioRecordService"
+            android:name=".ScreenCaptureAudioRecordService"
             android:enabled="true"
             android:foregroundServiceType="mediaProjection" />
     </application>

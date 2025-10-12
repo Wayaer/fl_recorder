@@ -69,7 +69,7 @@ abstract class AudioRecorder(private val context: Context) {
         return mRecorder != null
     }
 
-    fun destroy() {
+    fun dispose() {
         stopRecording()
         mRecorder?.release()
         mRecorder = null
@@ -88,7 +88,7 @@ abstract class AudioRecorder(private val context: Context) {
                 )
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Exception: $e")
+            Log.e(TAG, "WriteAudioFile Exception: $e")
             e.printStackTrace()
         }
     }
