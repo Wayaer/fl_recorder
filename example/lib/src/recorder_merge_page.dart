@@ -71,14 +71,20 @@ class _RecorderMergePageState extends State<RecorderMergePage> {
             child: Column(children: [
           FlAudioDecibelsWave(minDecibel: 0.65, scaleFactor: 4, data: captureDecibels.reversed.toList()),
           Container(
-              width: double.infinity, alignment: Alignment.center, padding: const EdgeInsets.all(10), child: Text(captureText))
+              width: double.infinity,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(10),
+              child: Text(captureText))
         ])),
         Text('麦克风'),
         Card(
             child: Column(children: [
           FlAudioDecibelsWave(minDecibel: 0.65, scaleFactor: 4, data: microphoneDecibels.reversed.toList()),
           Container(
-              width: double.infinity, alignment: Alignment.center, padding: const EdgeInsets.all(10), child: Text(microphoneText))
+              width: double.infinity,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(10),
+              child: Text(microphoneText))
         ])),
         ElevatedText(
             text: 'initialize',

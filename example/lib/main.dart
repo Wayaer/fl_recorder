@@ -66,8 +66,7 @@ class ElevatedText extends StatelessWidget {
   final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) =>
-      ElevatedButton(onPressed: onPressed, child: Text(text));
+  Widget build(BuildContext context) => ElevatedButton(onPressed: onPressed, child: Text(text));
 }
 
 extension WidgetExtension on Widget {

@@ -11,30 +11,30 @@ Using microphone recording and system audio capture on Flutter,The frontend serv
 
 /// Initialize
 void initialize() {
-  FlRecorder().initialize(source: FlAudioSource.capture);
-  FlRecorder().initialize(source: FlAudioSource.microphone);
+  FlAudioSource.microphone.recorder;
+  FlAudioSource.capture.recorder;
 }
 
 /// Data stream
 void onChanged() {
-  FlRecorder().onChanged((AudioDescription audio) {
+  FlAudioSource.microphone.recorder.onChanged((AudioDescription audio) {
     debugPrint("milliseconds:${audio.milliseconds}");
   });
 }
 
 /// Start recording
 void startRecording() {
-  FlRecorder().startRecording();
+  FlAudioSource.microphone.recorder.startRecording();
 }
 
 /// Stop recording
 void stopRecording() {
-  FlRecorder().stopRecording();
+  FlAudioSource.microphone.recorder.stopRecording();
 }
 
 /// Dispose
 void dispose() {
-  FlRecorder().dispose();
+  FlAudioSource.microphone.recorder.dispose();
 }
 
 ```

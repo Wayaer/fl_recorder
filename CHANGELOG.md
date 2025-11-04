@@ -1,3 +1,7 @@
+## 0.4.0
+
+* Support for simultaneous access to the `microphone` and system audio `capture` on Android
+
 ## 0.3.0
 
 * AudioDescribe has added a decibel attribute, which is passed through native transmission

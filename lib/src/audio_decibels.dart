@@ -49,8 +49,7 @@ class FlAudioDecibelsWave extends StatelessWidget {
               margin: EdgeInsets.symmetric(horizontal: 1),
               height: double.infinity,
               alignment: Alignment.center,
-              child: Container(
-                  width: double.infinity, height: height, color: color));
+              child: Container(width: double.infinity, height: height, color: color));
         },
       ),
     );

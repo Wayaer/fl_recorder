@@ -12,8 +12,6 @@ class AudioDescribe {
         decibel = map['decibel'] as double;
 }
 
-
-
 /// ios 音频会话
 enum AVAudioSessionCategory {
   /// 播放音频
@@ -63,7 +61,6 @@ class FlRecorder {
     return result ?? false;
   }
 
-
   /// 设置 ios 音频会话
   Future<bool> setAudioSession({
     required AVAudioSessionCategory category,
@@ -76,13 +73,11 @@ class FlRecorder {
     });
     return result ?? false;
   }
-
 }
 
 bool get _supportPlatform => _isAndroid || _isIOS || _isHarmonyOS;
 
-bool get _isAndroid =>
-    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+bool get _isAndroid => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
 bool get _isHarmonyOS => !kIsWeb && defaultTargetPlatform.name == 'ohos';
 
