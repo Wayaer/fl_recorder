@@ -9,28 +9,7 @@ class AudioDescribe {
 
   AudioDescribe.fromMap(Map map)
       : byte = map['byte'] as List<int>,
-        decibel = map['decibel'] as double;
-}
-
-/// ios 音频会话
-enum AVAudioSessionCategory {
-  /// 播放音频
-  ambient,
-
-  /// 播放音频 不允许打断
-  soloAmbient,
-
-  /// 播放音频
-  playback,
-
-  /// 录音
-  record,
-
-  /// 同时播放和录音
-  playAndRecord,
-
-  /// 同时播放和录音 不允许打断
-  multiRoute,
+        decibel = (map['decibel'] as num).toDouble();
 }
 
 typedef FlRecorderCallback = void Function(AudioDescribe audio);
@@ -48,10 +27,10 @@ class FlRecorder {
 
   static FlRecorder get instance => FlRecorder();
 
-  /// 麦克风录音
-  final microphoneRecorder = FlAudioSourceRecorder._(FlAudioSource.microphone);
+  /// 录制音频
+  final recordRecorder = FlAudioSourceRecorder._(FlAudioSource.record);
 
-  /// 系统采集音频
+  /// 屏幕录制
   final captureRecorder = FlAudioSourceRecorder._(FlAudioSource.capture);
 
   /// 请求忽略电池优化

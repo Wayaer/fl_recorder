@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 part 'src/audio_decibels.dart';
+
 part 'src/audio_recorder.dart';
+
+part 'src/enum.dart';
 
 part 'src/audio_source_recorder.dart';

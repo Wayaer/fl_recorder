@@ -41,11 +41,11 @@
         android:allowAudioPlaybackCapture="true"
         tools:targetApi="q">
         <service
-            android:name=".MicrophoneAudioRecordService"
+            android:name=".RecordAudioRecorderService"
             android:enabled="true"
             android:foregroundServiceType="microphone" />
         <service
-            android:name=".ScreenCaptureAudioRecordService"
+            android:name=".ScreenCaptureRecorderService"
             android:enabled="true"
             android:foregroundServiceType="mediaProjection" />
     </application>

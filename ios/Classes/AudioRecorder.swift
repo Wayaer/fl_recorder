@@ -13,11 +13,15 @@ class FlAudioRecorder: NSObject {
         self.sourceEvent = sourceEvent
     }
 
-    public func getEventChannel() -> FlEventChannel {
+    public func getEventChannel() -> FlEventChannel? {
         if flEventChannel == nil {
             flEventChannel = FlChannelPlugin.getEventChannel("fl.recorder.event.\(sourceEvent)")
         }
-        return flEventChannel!
+        return flEventChannel
+    }
+
+    public func sendData(_ args: Any) -> Bool {
+        return flEventChannel?.send(args) == true
     }
 
     // 初始化

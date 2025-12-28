@@ -6,6 +6,18 @@
       "default",
       "tablet",
       "2in1"
-    ]
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.KEEP_BACKGROUND_RUNNING"
+      },
+      {
+        "name": "ohos.permission.MICROPHONE",
+        "usedScene": {
+          "when": "inuse"
+        },
+        "reason": "$string:module_desc"
+      }
+    ],
   }
 }

@@ -3,7 +3,7 @@ import AVFoundation
 import fl_channel
 import Flutter
 
-class MicrophoneAudioRecorder: FlAudioRecorder, AVAudioRecorderDelegate {
+class RecordAudioRecorder: FlAudioRecorder, AVAudioRecorderDelegate {
     var audioRecorder: AVAudioRecorder?
     var timer: Timer?
     var segmentDuration: TimeInterval = 0.1 // 数据片段的时间间隔（秒）
@@ -11,7 +11,7 @@ class MicrophoneAudioRecorder: FlAudioRecorder, AVAudioRecorderDelegate {
     var recordingUrl: URL?
 
     init() {
-        super.init("microphone")
+        super.init("record")
     }
 
     override func startRecording(_ result: @escaping FlutterResult) {
@@ -41,7 +41,7 @@ class MicrophoneAudioRecorder: FlAudioRecorder, AVAudioRecorderDelegate {
             if granted {
                 let state = FlAudioRecorder.setAudioSession(.record, true)
                 if state {
-                    self.beginBackgroundTask("MicrophoneAudioRecorder")
+                    self.beginBackgroundTask("RecordAudioRecorder")
                 } else {
                     result(false)
                     return
@@ -68,7 +68,7 @@ class MicrophoneAudioRecorder: FlAudioRecorder, AVAudioRecorderDelegate {
                     self.audioRecorder?.prepareToRecord()
                     self.audioRecorder?.record()
                     self.isRecording = true
-                    _ = self.getEventChannel().send(true)
+                    _ = self.sendData(true)
                     result(true)
                     return
                 } catch {
@@ -91,7 +91,7 @@ class MicrophoneAudioRecorder: FlAudioRecorder, AVAudioRecorderDelegate {
         let fileSize = fileHandle.seekToEndOfFile()
         fileHandle.seek(toFileOffset: UInt64(lastReadOffset))
         let newData = fileHandle.readData(ofLength: Int(fileSize) - lastReadOffset)
-        _ = getEventChannel().send([
+        _ = sendData([
             "byte": newData,
             "decibel": getNormalizedDecibel()
         ])
@@ -115,19 +115,19 @@ class MicrophoneAudioRecorder: FlAudioRecorder, AVAudioRecorderDelegate {
     }
 
     public func audioRecorderBeginInterruption(_ recorder: AVAudioRecorder) {
-        _ = getEventChannel().send(true)
+        _ = sendData(true)
     }
 
     public func audioRecorderEndInterruption(_ recorder: AVAudioRecorder, withOptions flags: Int) {
-        _ = getEventChannel().send(false)
+        _ = sendData(false)
     }
 
     public func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
-        _ = getEventChannel().send(false)
+        _ = sendData(false)
     }
 
     public func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: (any Error)?) {
-        _ = getEventChannel().send(false)
+        _ = sendData(false)
         stopRecording()
     }
 }

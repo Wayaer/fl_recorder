@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.media.*
 import android.media.projection.MediaProjection
-import android.os.Build
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import fl.channel.FlChannelPlugin
@@ -27,7 +26,7 @@ abstract class AudioRecorder(private val context: Context) {
         const val RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT
     }
 
-    open var flEventChannel: FlEventChannel? = null
+    private var flEventChannel: FlEventChannel? = null
 
     fun getEventChannel(source: String) {
         if (flEventChannel == null) {
@@ -52,11 +51,11 @@ abstract class AudioRecorder(private val context: Context) {
     fun startRecording(): Boolean {
         if (isRecording) return false
         isRecording = true
-        flEventChannel?.send(true)
+        sendData(true)
         mRecorder?.startRecording()
         if (mRecorder != null) {
             recordingThread = null
-            recordingThread = Thread({ writeAudioFile() }, "System Audio Recording")
+            recordingThread = Thread({ sendBuffer() }, "System Audio Recording")
             recordingThread?.start()
         }
         return mRecorder != null
@@ -65,7 +64,7 @@ abstract class AudioRecorder(private val context: Context) {
     fun stopRecording(): Boolean {
         isRecording = false
         mRecorder?.stop()
-        flEventChannel?.send(false)
+        sendData(false)
         return mRecorder != null
     }
 
@@ -78,19 +77,22 @@ abstract class AudioRecorder(private val context: Context) {
     }
 
 
-    private fun writeAudioFile() {
+    private fun sendBuffer() {
         try {
             val byte = ByteArray(bufferSize)
             while (isRecording) {
                 val readSize = mRecorder!!.read(byte, 0, bufferSize)
-                flEventChannel?.send(
+                sendData(
                     mapOf("byte" to byte, "decibel" to getNormalizedDecibel(readSize, byte))
                 )
             }
         } catch (e: Exception) {
-            Log.e(TAG, "WriteAudioFile Exception: $e")
-            e.printStackTrace()
+            Log.e(TAG, "send exception: $e")
         }
+    }
+
+    fun sendData(args: Any) {
+        flEventChannel?.send(args)
     }
 
     private fun getNormalizedDecibel(readSize: Int, byte: ByteArray): Double {
@@ -105,6 +107,5 @@ abstract class AudioRecorder(private val context: Context) {
         val dB = 20 * log10(maxAmplitude / referenceAmp)
         return maxOf(0.0, minOf(1.0, dB / maxDecibels + 1))
     }
-
 
 }

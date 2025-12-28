@@ -1,22 +1,5 @@
 part of '../fl_recorder.dart';
 
-/// Audio 来源
-enum FlAudioSource {
-  /// 麦克风录音
-  microphone,
-
-  /// 系统采集音频
-  capture;
-
-  /// 获取对应的录音器
-  FlAudioSourceRecorder get recorder => switch (this) {
-        microphone => FlRecorder.instance.microphoneRecorder,
-        capture => FlRecorder.instance.captureRecorder,
-      };
-
-  Map<String, dynamic> toMap() => {'source': _isIOS ? 0 : index};
-}
-
 class FlAudioSourceRecorder {
   final FlAudioSource source;
 
@@ -52,11 +35,15 @@ class FlAudioSourceRecorder {
   String get _eventChannelName => 'fl.recorder.event.${source.name}';
 
   /// 初始化 前台任务 和录音工具
-  Future<bool> initialize() async {
+  Future<bool> initialize(
+      {
+      /// [FlAudioSource.record] 时有效
+      /// [FlAudioSource.capture] 时无效
+      SourceTypeForHarmonyOS sourceType = SourceTypeForHarmonyOS.mic}) async {
     if (!_supportPlatform) return false;
     _flEventChannel = await FlChannel().create(_eventChannelName);
     _flEventChannel?.listen(_onData, onError: _onError, onDone: _onDone);
-    final result = await _channel.invokeMethod<bool>('initialize', source.toMap());
+    final result = await _channel.invokeMethod<bool>('initialize', {...source.toMap(), ...sourceType.toMap()});
     _duration = Duration.zero;
     return _flEventChannel != null && (result ?? false);
   }
@@ -101,7 +88,10 @@ class FlAudioSourceRecorder {
     _isRecording = false;
   }
 
+  /// 数据监听
   FlRecorderCallback? _onRecording;
+
+  /// 状态变化监听
   FlRecorderStateCallback? _onStateChanged;
 
   /// 数据流监听
@@ -115,11 +105,15 @@ class FlAudioSourceRecorder {
   }
 
   void _onData(dynamic data) {
-    if (data is Map) {
-      _onRecording?.call(AudioDescribe.fromMap(data));
-    } else if (data is bool) {
-      _isRecording = data;
-      _onStateChanged?.call(_isRecording);
+    try {
+      if (data is Map) {
+        _onRecording?.call(AudioDescribe.fromMap(data));
+      } else if (data is bool) {
+        _isRecording = data;
+        _onStateChanged?.call(_isRecording);
+      }
+    } catch (e) {
+      debugPrint("onData error: $e");
     }
   }
 }

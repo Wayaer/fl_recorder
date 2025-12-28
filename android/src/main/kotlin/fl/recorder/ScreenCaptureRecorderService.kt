@@ -10,7 +10,7 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 
-class ScreenCaptureAudioRecordService : NotificationService() {
+class ScreenCaptureRecorderService : NotificationService() {
 
     private lateinit var mediaProjectionManager: MediaProjectionManager
     private var mMediaProjectionCallback: MediaProjectionCallback? = null
@@ -25,8 +25,8 @@ class ScreenCaptureAudioRecordService : NotificationService() {
     private val binder = ScreenCaptureAudioRecordServiceBinder()
 
     inner class ScreenCaptureAudioRecordServiceBinder : Binder() {
-        fun getService(): ScreenCaptureAudioRecordService {
-            return this@ScreenCaptureAudioRecordService
+        fun getService(): ScreenCaptureRecorderService {
+            return this@ScreenCaptureRecorderService
         }
     }
 
@@ -45,7 +45,7 @@ class ScreenCaptureAudioRecordService : NotificationService() {
             mediaProjection =
                 mediaProjectionManager.getMediaProjection(Activity.RESULT_OK, resultData)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && mediaProjection != null) {
-                mRecorder = ScreenCaptureAudioRecorder(this)
+                mRecorder = ScreenCaptureRecorder(this)
                 mRecorder!!.initialize(mediaProjection!!)
             } else {
                 mediaProjection?.stop()
@@ -79,9 +79,9 @@ class ScreenCaptureAudioRecordService : NotificationService() {
     }
 
 
-    companion object {
+    companion object Companion {
         fun getIntent(context: Context): Intent {
-            return Intent(context, ScreenCaptureAudioRecordService::class.java)
+            return Intent(context, ScreenCaptureRecorderService::class.java)
         }
     }
 

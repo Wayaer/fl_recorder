@@ -3,7 +3,7 @@ import fl_channel
 import Flutter
 import ReplayKit
 
-class ScreenCaptureAudioRecorder: FlAudioRecorder, RPScreenRecorderDelegate {
+class ScreenCaptureRecorder: FlAudioRecorder, RPScreenRecorderDelegate {
     var screenRecorder = RPScreenRecorder.shared()
 
     init() {
@@ -16,7 +16,7 @@ class ScreenCaptureAudioRecorder: FlAudioRecorder, RPScreenRecorderDelegate {
             return
         }
         isRecording = true
-        _ = getEventChannel().send(true)
+        _ = sendData(true)
         startScreenRecording(result)
     }
 
@@ -37,7 +37,7 @@ class ScreenCaptureAudioRecorder: FlAudioRecorder, RPScreenRecorderDelegate {
             screenRecorder.startCapture(handler: { [self] _, _, error in
                 if error != nil {
                     isRecording = false
-                    _ = getEventChannel().send(false)
+                    _ = sendData(false)
                 } else {
 //                     switch bufferType {
 //                     case .audioApp:
@@ -62,11 +62,11 @@ class ScreenCaptureAudioRecorder: FlAudioRecorder, RPScreenRecorderDelegate {
     }
 
     public func screenRecorder(_ screenRecorder: RPScreenRecorder, didStopRecordingWith previewViewController: RPPreviewViewController?, error: (any Error)?) {
-        _ = getEventChannel().send(false)
+        _ = sendData(false)
     }
 
     public func screenRecorder(_ screenRecorder: RPScreenRecorder, didStopRecordingWithError error: any Error, previewViewController: RPPreviewViewController?) {
-        _ = getEventChannel().send(false)
+        _ = sendData(false)
         stopRecording()
     }
 

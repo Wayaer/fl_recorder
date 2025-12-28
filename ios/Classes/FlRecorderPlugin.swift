@@ -18,11 +18,11 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
         super.init()
     }
 
-    // 麦克风录音
-    var microphoneAudioRecorder: MicrophoneAudioRecorder?
+    // 录制音频
+    var recordAudioRecorder: RecordAudioRecorder?
 
     // 录屏
-    var screenCaptureAudioRecorder: ScreenCaptureAudioRecorder?
+    var screenCaptureRecorder: ScreenCaptureRecorder?
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
@@ -30,17 +30,17 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
             let args = call.arguments as! [String: Any]
             let source = args["source"] as? Int
             if source == 0 {
-                if microphoneAudioRecorder == nil {
-                    microphoneAudioRecorder = MicrophoneAudioRecorder()
-                    microphoneAudioRecorder?.initialize()
+                if recordAudioRecorder == nil {
+                    recordAudioRecorder = RecordAudioRecorder()
+                    recordAudioRecorder?.initialize()
                 }
-                result(microphoneAudioRecorder != nil)
+                result(recordAudioRecorder != nil)
             } else if source == 1 {
-                if screenCaptureAudioRecorder == nil {
-                    screenCaptureAudioRecorder = ScreenCaptureAudioRecorder()
-                    screenCaptureAudioRecorder?.initialize()
+                if screenCaptureRecorder == nil {
+                    screenCaptureRecorder = ScreenCaptureRecorder()
+                    screenCaptureRecorder?.initialize()
                 }
-                result(screenCaptureAudioRecorder != nil)
+                result(screenCaptureRecorder != nil)
             } else {
                 result(false)
             }
@@ -48,13 +48,13 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
             let args = call.arguments as! [String: Any]
             let source = args["source"] as? Int
             if source == 0 {
-                if microphoneAudioRecorder != nil {
-                    microphoneAudioRecorder?.startRecording(result)
+                if recordAudioRecorder != nil {
+                    recordAudioRecorder?.startRecording(result)
                     return
                 }
             } else if source == 1 {
-                if screenCaptureAudioRecorder != nil {
-                    screenCaptureAudioRecorder?.startRecording(result)
+                if screenCaptureRecorder != nil {
+                    screenCaptureRecorder?.startRecording(result)
                     return
                 }
             } else {
@@ -64,12 +64,11 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
             let args = call.arguments as! [String: Any]
             let source = args["source"] as? Int
             if source == 0 {
-                microphoneAudioRecorder?.stopRecording()
-                result(microphoneAudioRecorder != nil)
+                recordAudioRecorder?.stopRecording()
+                result(recordAudioRecorder != nil)
             } else if source == 1 {
-                screenCaptureAudioRecorder?.stopRecording()
-
-                result(screenCaptureAudioRecorder != nil)
+                screenCaptureRecorder?.stopRecording()
+                result(screenCaptureRecorder != nil)
             } else {
                 result(false)
             }
@@ -77,13 +76,13 @@ public class FlRecorderPlugin: NSObject, FlutterPlugin, AVAudioRecorderDelegate,
             let args = call.arguments as! [String: Any]
             let source = args["source"] as? Int
             if source == 0 {
-                microphoneAudioRecorder?.dispose()
-                microphoneAudioRecorder = nil
-                result(microphoneAudioRecorder == nil)
+                recordAudioRecorder?.dispose()
+                recordAudioRecorder = nil
+                result(recordAudioRecorder == nil)
             } else if source == 1 {
-                screenCaptureAudioRecorder?.dispose()
-                screenCaptureAudioRecorder = nil
-                result(screenCaptureAudioRecorder == nil)
+                screenCaptureRecorder?.dispose()
+                screenCaptureRecorder = nil
+                result(screenCaptureRecorder == nil)
             } else { result(false) }
         case "setAudioSession":
             let args = call.arguments as! [String: Any]

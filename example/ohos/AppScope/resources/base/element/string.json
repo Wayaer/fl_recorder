@@ -3,6 +3,10 @@
     {
       "name": "app_name",
       "value": "FlRecorder"
+    },
+    {
+      "name": "audio_record",
+      "value": "音频录制"
     }
   ]
 }

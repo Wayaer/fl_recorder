@@ -15,13 +15,13 @@ class RecorderMergePage extends StatefulWidget {
 
 class _RecorderMergePageState extends State<RecorderMergePage> {
   FlAudioSourceRecorder captureRecorder = FlAudioSource.capture.recorder;
-  FlAudioSourceRecorder microphoneRecorder = FlAudioSource.microphone.recorder;
+  FlAudioSourceRecorder recordRecorder = FlAudioSource.record.recorder;
   List<int> captureByte = [];
-  List<int> microphoneByte = [];
+  List<int> recordByte = [];
   List<double> captureDecibels = [];
-  List<double> microphoneDecibels = [];
+  List<double> recordDecibels = [];
   String captureText = '';
-  String microphoneText = '';
+  String recordText = '';
 
   @override
   void initState() {
@@ -46,17 +46,17 @@ class _RecorderMergePageState extends State<RecorderMergePage> {
     captureRecorder.onStateChanged((bool isRecording) {
       debugPrint("isRecording:$isRecording");
     });
-    microphoneRecorder.onChanged((AudioDescribe audio) {
-      microphoneByte.addAll(audio.byte);
-      microphoneDecibels.add(audio.decibel);
-      microphoneText = ("isRecording:${microphoneRecorder.isRecording}\n"
-          "byte:${microphoneByte.length}\n"
+    recordRecorder.onChanged((AudioDescribe audio) {
+      recordByte.addAll(audio.byte);
+      recordDecibels.add(audio.decibel);
+      recordText = ("isRecording:${recordRecorder.isRecording}\n"
+          "byte:${recordByte.length}\n"
           "length:${audio.byte.length}\n"
-          "duration:${microphoneRecorder.duration}\n"
+          "duration:${recordRecorder.duration}\n"
           "decibel:${audio.decibel}");
       if (mounted) setState(() {});
     });
-    microphoneRecorder.onStateChanged((bool isRecording) {
+    recordRecorder.onStateChanged((bool isRecording) {
       debugPrint("isRecording:$isRecording");
     });
   }
@@ -64,7 +64,7 @@ class _RecorderMergePageState extends State<RecorderMergePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('麦克风和音频采集')),
+      appBar: AppBar(title: Text('录制和采集')),
       body: Universal(isScroll: true, children: [
         Text('音频采集'),
         Card(
@@ -79,20 +79,20 @@ class _RecorderMergePageState extends State<RecorderMergePage> {
         Text('麦克风'),
         Card(
             child: Column(children: [
-          FlAudioDecibelsWave(minDecibel: 0.65, scaleFactor: 4, data: microphoneDecibels.reversed.toList()),
+          FlAudioDecibelsWave(minDecibel: 0.65, scaleFactor: 4, data: recordDecibels.reversed.toList()),
           Container(
               width: double.infinity,
               alignment: Alignment.center,
               padding: const EdgeInsets.all(10),
-              child: Text(microphoneText))
+              child: Text(recordText))
         ])),
         ElevatedText(
             text: 'initialize',
             onPressed: () async {
               final captureResult = await captureRecorder.initialize();
               captureText = "initialize : $captureResult";
-              final microphoneResult = await microphoneRecorder.initialize();
-              microphoneText = "initialize : $microphoneResult";
+              final recordResult = await recordRecorder.initialize();
+              recordText = "initialize : $recordResult";
               setState(() {});
             }),
         ElevatedText(
@@ -100,8 +100,8 @@ class _RecorderMergePageState extends State<RecorderMergePage> {
             onPressed: () async {
               final captureResult = await captureRecorder.startRecording();
               captureText = "startRecording : $captureResult";
-              final microphoneResult = await microphoneRecorder.startRecording();
-              microphoneText = "startRecording : $microphoneResult";
+              final recordResult = await recordRecorder.startRecording();
+              recordText = "startRecording : $recordResult";
               setState(() {});
             }),
         ElevatedText(
@@ -109,8 +109,8 @@ class _RecorderMergePageState extends State<RecorderMergePage> {
             onPressed: () async {
               final captureResult = await captureRecorder.stopRecording();
               captureText = "stopRecording : $captureResult";
-              final microphoneResult = await microphoneRecorder.stopRecording();
-              microphoneText = "stopRecording : $microphoneResult";
+              final recordResult = await recordRecorder.stopRecording();
+              recordText = "stopRecording : $recordResult";
               setState(() {});
             }),
         ElevatedText(
@@ -118,8 +118,8 @@ class _RecorderMergePageState extends State<RecorderMergePage> {
             onPressed: () async {
               final captureResult = await captureRecorder.dispose();
               captureText = "dispose : $captureResult";
-              final microphoneResult = await microphoneRecorder.dispose();
-              microphoneText = "dispose : $microphoneResult";
+              final recordResult = await recordRecorder.dispose();
+              recordText = "dispose : $recordResult";
               setState(() {});
             }),
         ElevatedText(text: '播放录音数据', onPressed: playRecordData)
@@ -128,10 +128,10 @@ class _RecorderMergePageState extends State<RecorderMergePage> {
   }
 
   final capturePlayer = FlutterSoundPlayer();
-  final microphonePlayer = FlutterSoundPlayer();
+  final recordPlayer = FlutterSoundPlayer();
 
   void playRecordData() async {
-    if (captureDecibels.isEmpty && microphoneDecibels.isEmpty) {
+    if (captureDecibels.isEmpty && recordDecibels.isEmpty) {
       showToast('请先录音数据');
       return;
     }
@@ -144,13 +144,13 @@ class _RecorderMergePageState extends State<RecorderMergePage> {
           await capturePlayer.stopPlayer();
           capturePlayer.closePlayer();
         });
-    await microphonePlayer.openPlayer();
-    microphonePlayer.startPlayer(
+    await recordPlayer.openPlayer();
+    recordPlayer.startPlayer(
         codec: Codec.pcm16,
-        fromDataBuffer: Uint8List.fromList(microphoneByte),
+        fromDataBuffer: Uint8List.fromList(recordByte),
         whenFinished: () async {
-          await microphonePlayer.stopPlayer();
-          microphonePlayer.closePlayer();
+          await recordPlayer.stopPlayer();
+          recordPlayer.closePlayer();
         });
   }
 
@@ -158,6 +158,6 @@ class _RecorderMergePageState extends State<RecorderMergePage> {
   void dispose() {
     super.dispose();
     captureRecorder.dispose();
-    microphoneRecorder.dispose();
+    recordRecorder.dispose();
   }
 }

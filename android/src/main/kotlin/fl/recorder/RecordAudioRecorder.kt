@@ -5,10 +5,10 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 
 
-class MicrophoneAudioRecorder(context: Context) : AudioRecorder(context) {
+class RecordAudioRecorder(context: Context) : AudioRecorder(context) {
 
     override fun initialize(): Boolean {
-        getEventChannel("microphone")
+        getEventChannel("record")
         if (mRecorder == null) {
             if (checkSelfPermission()) {
                 bufferSize = AudioRecord.getMinBufferSize(

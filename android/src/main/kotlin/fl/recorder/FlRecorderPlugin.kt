@@ -47,14 +47,14 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
     private var isIgnoringBatteryResult: MethodChannel.Result? = null
 
     // 麦克风
-    private var microphoneAudioRecordService: MicrophoneAudioRecordService? = null
-    private var microphoneAudioServiceConnection: ServiceConnection? = null
-    private var microphoneResult: MethodChannel.Result? = null
-    private val microphonePermissionRequestCode = 1000
+    private var recordAudioRecorder: RecordAudioRecorderService? = null
+    private var recordAudioServiceConnection: ServiceConnection? = null
+    private var recordResult: MethodChannel.Result? = null
+    private val recordPermissionRequestCode = 1000
 
     // 系统录音
-    private var screenCaptureAudioRecordService: ScreenCaptureAudioRecordService? = null
-    private var screenCaptureAudioServiceConnection: ServiceConnection? = null
+    private var screenCaptureRecorderService: ScreenCaptureRecorderService? = null
+    private var screenCaptureRecorderServiceConnection: ServiceConnection? = null
     private var screenCaptureResult: MethodChannel.Result? = null
     private val screenCaptureRequestCode = 666
 
@@ -63,13 +63,13 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
             "initialize" -> {
                 val source = call.argument<Int>("source")
                 if (source == 0) {
-                    if (microphoneAudioRecordService != null) {
+                    if (recordAudioRecorder != null) {
                         result.success(true)
                         return
                     }
-                    this.microphoneResult = result
+                    this.recordResult = result
                 } else if (source == 1) {
-                    if (screenCaptureAudioRecordService != null) {
+                    if (screenCaptureRecorderService != null) {
                         result.success(true)
                         return
                     }
@@ -81,8 +81,8 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
             "startRecording" -> {
                 val source = call.argument<Int>("source")
                 val value = when (source) {
-                    0 -> microphoneAudioRecordService?.startRecording()
-                    1 -> screenCaptureAudioRecordService?.startRecording()
+                    0 -> recordAudioRecorder?.startRecording()
+                    1 -> screenCaptureRecorderService?.startRecording()
                     else -> null
                 }
                 result.success(value == true)
@@ -91,8 +91,8 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
             "stopRecording" -> {
                 val source = call.argument<Int>("source")
                 val value = when (source) {
-                    0 -> microphoneAudioRecordService?.stopRecording()
-                    1 -> screenCaptureAudioRecordService?.stopRecording()
+                    0 -> recordAudioRecorder?.stopRecording()
+                    1 -> screenCaptureRecorderService?.stopRecording()
                     else -> null
                 }
                 result.success(value == true)
@@ -102,19 +102,19 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
                 try {
                     val source = call.argument<Int>("source")
                     if (source == 0) {
-                        context.stopService(MicrophoneAudioRecordService.getIntent(context))
-                        microphoneAudioServiceConnection?.let {
+                        context.stopService(RecordAudioRecorderService.getIntent(context))
+                        recordAudioServiceConnection?.let {
                             activityBinding.activity.unbindService(it)
                         }
-                        microphoneAudioRecordService = null
-                        microphoneAudioServiceConnection = null
+                        recordAudioRecorder = null
+                        recordAudioServiceConnection = null
                     } else if (source == 1) {
-                        context.stopService(ScreenCaptureAudioRecordService.getIntent(context))
-                        screenCaptureAudioServiceConnection?.let {
+                        context.stopService(ScreenCaptureRecorderService.getIntent(context))
+                        screenCaptureRecorderServiceConnection?.let {
                             activityBinding.activity.unbindService(it)
                         }
-                        screenCaptureAudioRecordService = null
-                        screenCaptureAudioServiceConnection = null
+                        screenCaptureRecorderService = null
+                        screenCaptureRecorderServiceConnection = null
                     }
                     result.success(source != null)
                 } catch (_: Exception) {
@@ -149,7 +149,7 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 permissions.add(Manifest.permission.FOREGROUND_SERVICE_MICROPHONE)
             }
-            requestCode = microphonePermissionRequestCode
+            requestCode = recordPermissionRequestCode
         } else if (source == 1) {
             permissions.add(Manifest.permission.CAPTURE_AUDIO_OUTPUT)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -190,10 +190,10 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == screenCaptureRequestCode) {
-                val intent = ScreenCaptureAudioRecordService.getIntent(context)
+                val intent = ScreenCaptureRecorderService.getIntent(context)
                 intent.putExtra("resultData", data)
-                screenCaptureAudioServiceConnection = FlServiceConnection(1)
-                startForegroundService(intent, 1, screenCaptureAudioServiceConnection!!)
+                screenCaptureRecorderServiceConnection = FlServiceConnection(1)
+                startForegroundService(intent, 1, screenCaptureRecorderServiceConnection!!)
             }
         }
         if (requestCode == isIgnoringBatteryOptimizationsCode) {
@@ -215,12 +215,10 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
         requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ): Boolean {
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (requestCode == microphonePermissionRequestCode) {
-                microphoneAudioServiceConnection = FlServiceConnection(0)
+            if (requestCode == recordPermissionRequestCode) {
+                recordAudioServiceConnection = FlServiceConnection(0)
                 startForegroundService(
-                    MicrophoneAudioRecordService.getIntent(context),
-                    0,
-                    microphoneAudioServiceConnection!!
+                    RecordAudioRecorderService.getIntent(context), 0, recordAudioServiceConnection!!
                 )
             } else if (requestCode == mediaProjectionPermissionRequestCode) {
                 val mProjectionManager =
@@ -259,27 +257,27 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
     ) : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             if (source == 0) {
-                microphoneResult?.success(true)
-                microphoneResult = null
+                recordResult?.success(true)
+                recordResult = null
                 val binder =
-                    service as MicrophoneAudioRecordService.MicrophoneAudioRecordServiceBinder
-                microphoneAudioRecordService = binder.getService()
+                    service as RecordAudioRecorderService.MicrophoneAudioRecordServiceBinder
+                recordAudioRecorder = binder.getService()
             } else if (source == 1) {
                 screenCaptureResult?.success(true)
                 screenCaptureResult = null
                 val binder =
-                    service as ScreenCaptureAudioRecordService.ScreenCaptureAudioRecordServiceBinder
-                screenCaptureAudioRecordService = binder.getService()
+                    service as ScreenCaptureRecorderService.ScreenCaptureAudioRecordServiceBinder
+                screenCaptureRecorderService = binder.getService()
             }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             if (source == 0) {
-                microphoneAudioRecordService?.dispose()
-                microphoneAudioRecordService = null
+                recordAudioRecorder?.dispose()
+                recordAudioRecorder = null
             } else if (source == 1) {
-                screenCaptureAudioRecordService?.dispose()
-                screenCaptureAudioRecordService = null
+                screenCaptureRecorderService?.dispose()
+                screenCaptureRecorderService = null
             }
         }
     }

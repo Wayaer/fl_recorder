@@ -5,17 +5,17 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 
-class MicrophoneAudioRecordService : NotificationService() {
+class RecordAudioRecorderService : NotificationService() {
     private val binder = MicrophoneAudioRecordServiceBinder()
 
     inner class MicrophoneAudioRecordServiceBinder : Binder() {
-        fun getService(): MicrophoneAudioRecordService {
-            return this@MicrophoneAudioRecordService
+        fun getService(): RecordAudioRecorderService {
+            return this@RecordAudioRecorderService
         }
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        mRecorder = MicrophoneAudioRecorder(this)
+        mRecorder = RecordAudioRecorder(this)
         mRecorder!!.initialize()
         return super.onStartCommand(intent, flags, startId)
     }
@@ -37,9 +37,9 @@ class MicrophoneAudioRecordService : NotificationService() {
         super.onDestroy()
     }
 
-    companion object {
+    companion object Companion {
         fun getIntent(context: Context): Intent {
-            return Intent(context, MicrophoneAudioRecordService::class.java)
+            return Intent(context, RecordAudioRecorderService::class.java)
         }
     }
 }

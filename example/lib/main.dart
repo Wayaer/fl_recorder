@@ -42,9 +42,9 @@ class HomePage extends StatelessWidget {
                 }),
           ElevatedText(
               onPressed: () {
-                AudioSourceRecorderPage(source: FlAudioSource.microphone).showModalPopup(context);
+                AudioSourceRecorderPage(source: FlAudioSource.record).showModalPopup(context);
               },
-              text: 'FlRecorder microphone'),
+              text: 'FlRecorder record'),
           ElevatedText(
               onPressed: () {
                 AudioSourceRecorderPage(source: FlAudioSource.capture).showModalPopup(context);
@@ -54,7 +54,7 @@ class HomePage extends StatelessWidget {
               onPressed: () {
                 RecorderMergePage().showModalPopup(context);
               },
-              text: '麦克风和音频采集'),
+              text: '录制和采集'),
         ]));
   }
 }

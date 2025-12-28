@@ -37,6 +37,13 @@
       {
         "name": "ohos.permission.INTERNET"
       },
+      {
+        "name": "ohos.permission.MICROPHONE",
+        "usedScene": {
+          "when": "always"
+        },
+        "reason": "$string:audio_record"
+      }
     ]
   }
 }
