@@ -1,8 +1,10 @@
 import { Log } from "@ohos/flutter_ohos"
 import FlChannelPlugin from "fl_channel"
 import FlEventChannel from "fl_channel/src/main/ets/FlEventChannel"
-import { abilityAccessCtrl, Permissions } from "@kit.AbilityKit"
+import { abilityAccessCtrl, common, Permissions, WantAgent, wantAgent } from "@kit.AbilityKit"
 import { audio } from "@kit.AudioKit"
+import { backgroundTaskManager } from "@kit.BackgroundTasksKit"
+import { BusinessError } from '@kit.BasicServicesKit';
 
 export default class AudioRecorder {
   TAG: string = "FlRecorderPlugin"
@@ -11,11 +13,11 @@ export default class AudioRecorder {
   /// audioChannels
   audioChannels: number = audio.AudioChannel.CHANNEL_1
   ///
-  public context: Context
+  public context: common.UIAbilityContext
   /// buffer size
   bufferSize: number = 1024
 
-  constructor(context: Context) {
+  constructor(context: common.UIAbilityContext) {
     this.context = context
   }
 
@@ -116,5 +118,38 @@ export default class AudioRecorder {
       this.log(`权限申请失败 [${permissionList.join(',')}] ：${e}`);
     }
     return false
+  }
+
+
+  async startBackgroundRunning(bgMode: backgroundTaskManager.BackgroundMode): Promise<boolean> {
+    try {
+      const abilityInfo = this.context.abilityInfo
+      let wantAgentInfo: wantAgent.WantAgentInfo = {
+        wants: [
+          {
+            bundleName: abilityInfo.bundleName,
+            abilityName: abilityInfo.moduleName,
+          }
+        ],
+        actionType: wantAgent.OperationType.START_ABILITY,
+        requestCode: 0,
+        actionFlags: [wantAgent.WantAgentFlags.UPDATE_PRESENT_FLAG],
+      };
+      const wantAgentObj = await wantAgent.getWantAgent(wantAgentInfo)
+      await backgroundTaskManager.startBackgroundRunning(this.context,
+        bgMode, wantAgentObj as WantAgent)
+      return true;
+    } catch (error) {
+      this.log(`startBackgroundRunning(${bgMode}) error ${error}`);
+    }
+    return false
+  }
+
+  async stopBackgroundRunning() {
+    try {
+      await backgroundTaskManager.stopBackgroundRunning(this.context)
+    } catch (error) {
+      this.log(`stopBackgroundRunning error ${error}`);
+    }
   }
 }

@@ -2,6 +2,7 @@ import AudioRecorder from "./AudioRecorder";
 import { media } from '@kit.MediaKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { fileIo as fs } from '@kit.CoreFileKit';
+import { backgroundTaskManager } from "@kit.BackgroundTasksKit";
 
 export default class ScreenCaptureRecorder extends AudioRecorder {
   private captureRecordConfig: media.AVScreenCaptureRecordConfig = {
@@ -63,6 +64,7 @@ export default class ScreenCaptureRecorder extends AudioRecorder {
       await this.screenCapture.init(this.captureRecordConfig).catch((error: BusinessError) => {
         this.log(`initialize init error: ${error} `)
       })
+      await this.startBackgroundRunning(backgroundTaskManager.BackgroundMode.TASK_KEEPING);
       await this.screenCapture?.startRecording()
       return true
     } catch (error) {
@@ -76,6 +78,7 @@ export default class ScreenCaptureRecorder extends AudioRecorder {
       this.isRecording = false
       if (this.screenCapture) {
         this.screenCapture?.off("stateChange")
+        await this.stopBackgroundRunning();
         await this.screenCapture?.stopRecording()
         await this.screenCapture?.release()
         this.screenCapture = undefined

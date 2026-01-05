@@ -1,11 +1,13 @@
 import { audio } from '@kit.AudioKit'
 import AudioRecorder from './AudioRecorder'
 import { available } from './FlRecorderPlugin'
+import { common } from '@kit.AbilityKit'
+import { backgroundTaskManager } from '@kit.BackgroundTasksKit'
 
 export default class RecordAudioRecorder extends AudioRecorder {
   sourceType: audio.SourceType = audio.SourceType.SOURCE_TYPE_MIC
 
-  constructor(context: Context, sourceType?: audio.SourceType) {
+  constructor(context: common.UIAbilityContext, sourceType?: audio.SourceType) {
     super(context)
     if (sourceType) {
       this.sourceType = sourceType
@@ -60,6 +62,7 @@ export default class RecordAudioRecorder extends AudioRecorder {
   /// 开始采集
   public async startRecording(): Promise<boolean> {
     try {
+      await this.startBackgroundRunning(backgroundTaskManager.BackgroundMode.AUDIO_RECORDING);
       await this.audioCapturer?.start()
     } catch (error) {
       this.log(`startRecording cache:${error}`)
@@ -70,6 +73,7 @@ export default class RecordAudioRecorder extends AudioRecorder {
   /// 停止采集
   public async stopRecording(): Promise<boolean> {
     try {
+      await this.stopBackgroundRunning()
       await this.audioCapturer?.stop()
     } catch (error) {
       this.log(`stopRecording cache:${error}`)

@@ -30,6 +30,9 @@
               "action.system.home"
             ]
           }
+        ],
+        "backgroundModes": [
+          "audioRecording",
         ]
       }
     ],
