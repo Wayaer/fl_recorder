@@ -128,7 +128,7 @@ export default class AudioRecorder {
         wants: [
           {
             bundleName: abilityInfo.bundleName,
-            abilityName: abilityInfo.moduleName,
+            abilityName: abilityInfo.name,
           }
         ],
         actionType: wantAgent.OperationType.START_ABILITY,

@@ -33,6 +33,7 @@
         ],
         "backgroundModes": [
           "audioRecording",
+          "audioPlayback"
         ]
       }
     ],
