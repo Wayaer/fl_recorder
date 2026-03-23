@@ -9,6 +9,7 @@ import android.content.Context.MEDIA_PROJECTION_SERVICE
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.media.MediaRecorder
 import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.IBinder
@@ -58,6 +59,9 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
     private var screenCaptureResult: MethodChannel.Result? = null
     private val screenCaptureRequestCode = 666
 
+    // 录音源
+    private var audioSource: Int? = null
+
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "initialize" -> {
@@ -67,6 +71,7 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
                         result.success(true)
                         return
                     }
+                    audioSource = call.argument<Int?>("audioSource")
                     this.recordResult = result
                 } else if (source == 1) {
                     if (screenCaptureRecorderService != null) {
@@ -173,7 +178,7 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
     private fun requestIgnoreBatteryOptimizations() {
         try {
             val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-            intent.setData(("package:" + context.packageName).toUri())
+            intent.data = ("package:" + context.packageName).toUri()
             activityBinding.activity.startActivityForResult(
                 intent, isIgnoringBatteryOptimizationsCode
             )
@@ -218,7 +223,9 @@ class FlRecorderPlugin : FlutterPlugin, MethodCallHandler, PluginRegistry.Activi
             if (requestCode == recordPermissionRequestCode) {
                 recordAudioServiceConnection = FlServiceConnection(0)
                 startForegroundService(
-                    RecordAudioRecorderService.getIntent(context), 0, recordAudioServiceConnection!!
+                    RecordAudioRecorderService.getIntent(context, audioSource),
+                    0,
+                    recordAudioServiceConnection!!
                 )
             } else if (requestCode == mediaProjectionPermissionRequestCode) {
                 val mProjectionManager =

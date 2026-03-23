@@ -34,18 +34,30 @@ class FlAudioSourceRecorder {
 
   String get _eventChannelName => 'fl.recorder.event.${source.name}';
 
+  bool _isInitialized = false;
+
+  bool get isInitialized => _isInitialized;
+
   /// 初始化 前台任务 和录音工具
-  Future<bool> initialize(
-      {
-      /// [FlAudioSource.record] 时有效
-      /// [FlAudioSource.capture] 时无效
-      SourceTypeForHarmonyOS sourceType = SourceTypeForHarmonyOS.mic}) async {
-    if (!_supportPlatform) return false;
+  Future<bool> initialize({
+    /// [FlAudioSource.record] 时有效
+    /// [FlAudioSource.capture] 时无效
+    /// HarmonyOS 音频来源
+    SourceTypeForHarmonyOS sourceType = SourceTypeForHarmonyOS.mic,
+
+    /// android 音频来源
+    /// [FlAudioSource.record] 时有效
+    /// [FlAudioSource.capture] 时无效
+    AudioSourceForAndroid audioSource = AudioSourceForAndroid.defaultSource,
+  }) async {
+    if (!_supportPlatform || _isInitialized) return false;
     _flEventChannel = await FlChannel().create(_eventChannelName);
     _flEventChannel?.listen(_onData, onError: _onError, onDone: _onDone);
-    final result = await _channel.invokeMethod<bool>('initialize', {...source.toMap(), ...sourceType.toMap()});
+    final result = await _channel.invokeMethod<bool>('initialize',
+        {...source.toMap(), if (_isAndroid) ...audioSource.toMap(), if (_isHarmonyOS) ...sourceType.toMap()});
     _duration = Duration.zero;
-    return _flEventChannel != null && (result ?? false);
+    _isInitialized = _flEventChannel != null && (result ?? false);
+    return _isInitialized;
   }
 
   /// 开始录音 停止后可重新开启录音
@@ -77,6 +89,7 @@ class FlAudioSourceRecorder {
         _flEventChannel?.dispose();
       });
     }
+    if (result == true) _isInitialized = false;
     return result ?? false;
   }
 

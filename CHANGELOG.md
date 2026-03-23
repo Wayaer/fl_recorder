@@ -1,3 +1,10 @@
+## 0.5.0
+
+* Android supports setting audio source (only supports system noise reduction by specifying the
+  audio source).
+* HarmonyOS NEXT also supports setting audio source (only supports system noise reduction by
+  specifying the audio source).
+
 ## 0.4.0
 
 * Support for simultaneous access to the `microphone` and system audio `capture` on Android

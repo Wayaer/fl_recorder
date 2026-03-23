@@ -2,10 +2,8 @@ package fl.recorder
 
 import android.content.Context
 import android.media.AudioRecord
-import android.media.MediaRecorder
 
-
-class RecordAudioRecorder(context: Context) : AudioRecorder(context) {
+class RecordAudioRecorder(context: Context, val audioSource: Int) : AudioRecorder(context) {
 
     override fun initialize(): Boolean {
         getEventChannel("record")
@@ -15,7 +13,7 @@ class RecordAudioRecorder(context: Context) : AudioRecorder(context) {
                     RECORDER_SAMPLE_RATE, RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING
                 )
                 mRecorder = AudioRecord(
-                    MediaRecorder.AudioSource.DEFAULT,
+                    audioSource,
                     RECORDER_SAMPLE_RATE,
                     RECORDER_CHANNELS,
                     RECORDER_AUDIO_ENCODING,

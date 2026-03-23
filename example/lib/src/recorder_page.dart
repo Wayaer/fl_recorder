@@ -30,7 +30,8 @@ class _AudioSourceRecorderPageState extends State<AudioSourceRecorderPage> {
       recorder.onChanged((AudioDescribe audio) {
         byte.addAll(audio.byte);
         decibels.add(audio.decibel);
-        text = ("isRecording:${recorder.isRecording}\n"
+        text =
+            ("isRecording:${recorder.isRecording}\n"
             "byte:${byte.length}\n"
             "length:${audio.byte.length}\n"
             "duration:${recorder.duration}\n"
@@ -47,48 +48,70 @@ class _AudioSourceRecorderPageState extends State<AudioSourceRecorderPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('${widget.source}')),
-      body: Universal(isScroll: true, children: [
-        FlAudioDecibelsWave(minDecibel: 0.65, scaleFactor: 4, data: decibels.reversed.toList()),
-        12.heightBox,
-        Card(
+      body: Universal(
+        isScroll: true,
+        children: [
+          FlAudioDecibelsWave(minDecibel: 0.65, scaleFactor: 4, data: decibels.reversed.toList()),
+          12.heightBox,
+          Card(
             child: Container(
-                height: 140,
-                width: double.infinity,
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(10),
-                child: Text(text))),
-        ElevatedText(
-            text: 'initialize',
+              height: 140,
+              width: double.infinity,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(10),
+              child: Text(text),
+            ),
+          ),
+
+          ElevatedText(
+            text: 'initialize(主麦克风音源)',
             onPressed: () async {
               final result = await recorder.initialize();
               text = "initialize : $result";
               setState(() {});
-            }),
-        ElevatedText(
+            },
+          ),
+          if (isHarmonyOS || isAndroid)
+            ElevatedText(
+              text: 'initialize(系统降噪)',
+              onPressed: () async {
+                final result = await recorder.initialize(
+                  sourceType: SourceTypeForHarmonyOS.voiceCommunication,
+                  audioSource: AudioSourceForAndroid.voiceCommunication,
+                );
+                text = "initialize : $result";
+                setState(() {});
+              },
+            ),
+          ElevatedText(
             text: 'startRecording',
             onPressed: () async {
               final result = await recorder.startRecording();
               text = "startRecording : $result";
               debugPrint(text);
               setState(() {});
-            }),
-        ElevatedText(
+            },
+          ),
+          ElevatedText(
             text: 'stopRecording',
             onPressed: () async {
               final result = await recorder.stopRecording();
               text = "stopRecording : $result";
               debugPrint(text);
               setState(() {});
-            }),
-        ElevatedText(
+            },
+          ),
+          ElevatedText(
             text: 'dispose',
             onPressed: () async {
               final result = await recorder.dispose();
               text = "dispose : $result";
               setState(() {});
-            }),
-        ElevatedText(text: '播放录音数据', onPressed: playRecordData)
-      ]),
+            },
+          ),
+          ElevatedText(text: '播放录音数据', onPressed: playRecordData),
+        ],
+      ),
     );
   }
 
@@ -102,13 +125,14 @@ class _AudioSourceRecorderPageState extends State<AudioSourceRecorderPage> {
     showToast('开始播放录音');
     await player.openPlayer();
     player.startPlayer(
-        codec: Codec.pcm16,
-        fromDataBuffer: Uint8List.fromList(byte),
-        whenFinished: () async {
-          showToast('播放完毕');
-          await player.stopPlayer();
-          player.closePlayer();
-        });
+      codec: Codec.pcm16,
+      fromDataBuffer: Uint8List.fromList(byte),
+      whenFinished: () async {
+        showToast('播放完毕');
+        await player.stopPlayer();
+        player.closePlayer();
+      },
+    );
   }
 
   @override

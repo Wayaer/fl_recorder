@@ -2,6 +2,7 @@ package fl.recorder
 
 import android.content.Context
 import android.content.Intent
+import android.media.MediaRecorder
 import android.os.Binder
 import android.os.IBinder
 
@@ -15,7 +16,8 @@ class RecordAudioRecorderService : NotificationService() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        mRecorder = RecordAudioRecorder(this)
+        val audioSource = intent.getIntExtra("audioSource", MediaRecorder.AudioSource.DEFAULT)
+        mRecorder = RecordAudioRecorder(this, audioSource)
         mRecorder!!.initialize()
         return super.onStartCommand(intent, flags, startId)
     }
@@ -38,8 +40,12 @@ class RecordAudioRecorderService : NotificationService() {
     }
 
     companion object Companion {
-        fun getIntent(context: Context): Intent {
-            return Intent(context, RecordAudioRecorderService::class.java)
+        fun getIntent(context: Context, audioSource: Int? = null): Intent {
+            val intent = Intent(context, RecordAudioRecorderService::class.java)
+            audioSource?.let { audioSource ->
+                intent.putExtra("audioSource", audioSource)
+            }
+            return intent
         }
     }
 }
