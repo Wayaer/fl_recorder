@@ -19,11 +19,11 @@ typedef FlRecorderStateCallback = void Function(bool isRecording);
 MethodChannel _channel = MethodChannel('fl.recorder');
 
 class FlRecorder {
-  factory FlRecorder() => _singleton ??= FlRecorder._();
+  factory FlRecorder() => _instance;
 
   FlRecorder._();
 
-  static FlRecorder? _singleton;
+  static final FlRecorder _instance = FlRecorder._();
 
   static FlRecorder get instance => FlRecorder();
 

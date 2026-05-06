@@ -1,4 +1,4 @@
-## 0.5.0
+## 0.5.1
 
 * Android supports setting audio source (only supports system noise reduction by specifying the
   audio source).
